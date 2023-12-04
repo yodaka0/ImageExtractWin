@@ -44,11 +44,11 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
 
 * Conda
 
-    Download installer and run the script.  
-    インストーラーをダウンロードしてスクリプトを実行します。
+    miniconda(anaconda)をインストール
+    https://docs.conda.io/projects/miniconda/en/latest/
 
     condaのパスを通す
-    システム環境変数の編集->環境変数->PATH->新規->condaのpathをコピペ
+    システム環境変数の編集->環境変数->PATH->新規->condaのpathをコピペ(例　C:\Users\{ユーザー名}\miniconda3\condabin)
 
 
 <br />
