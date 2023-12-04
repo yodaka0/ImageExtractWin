@@ -19,6 +19,12 @@ from PytorchWildlife.data import transforms as pw_trans
 #from PytorchWildlife.data import datasets as pw_data 
 from PytorchWildlife import utils as pw_utils
 
+def contains_animal(labels):
+    for label in labels:
+        if 'animal' in label:
+            return True
+    return False
+
 def pw_detect(im_file, new_file, threshold=None):
     if threshold is not float:
         threshold = 0.2
@@ -53,16 +59,26 @@ def pw_detect(im_file, new_file, threshold=None):
     
 
     # Performing the detection on the single image
-    results = detection_model.single_image_detection(transform(img), img.shape, im_file, conf_thres=threshold)
+    result = detection_model.single_image_detection(transform(img), img.shape, im_file, conf_thres=threshold)
     
-    results['img_id'] = results['img_id'].replace("\\","/")
-    #results['detections']['tracker_id'] = 1
-    #print(results)
-    #print(type(results["img_id"].rsplit('/', 1)[1]))
-    #print(type(new_file_path))
+    result['img_id'] = result['img_id'].replace("\\","/")
 
     # Saving the detection results 
-    pw_utils.save_detection_images(results, new_file_path)
+    #print(results['labels'])
+    if contains_animal(result['labels']):
+        pw_utils.save_detection_images(result, new_file_path)
+        result['object'] = len(result['labels'])
+        img = Image.open(im_file)
+        exif_data = img._getexif()
+        date, time = exif_data[36867].split(' ')
+        result["Date"] = date
+        result["Time"] = time
+        result["Make"] = exif_data[271]
+    else:
+        result['object'] = 0
+        result["Date"] = 0
+        result["Time"] = 0
+        result["Make"] = None
 
     #%% Output to cropped images
     # Saving the detected objects as cropped images
@@ -73,3 +89,5 @@ def pw_detect(im_file, new_file, threshold=None):
     """output_folder = session_root + "_out"
     pw_utils.save_detection_json(results, output_folder,
                                 categories=detection_model.CLASS_NAMES)"""
+    
+    return result

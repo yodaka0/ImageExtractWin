@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import humanfriendly
+import pandas as pd
 from omegaconf import OmegaConf
 from multiprocessing import Process
 import multiprocessing
@@ -31,22 +32,32 @@ def find_image_files(folder_path):
 
 def process_image(im_file,session_root,threshold):
     #session_root = session_root.replace("\\\\","\\")
-    print(session_root)
+    #print(session_root)
     try:
         folder = os.path.dirname(session_root)
         folderpath = folder + "\\"
-        new_folder = im_file.replace(folderpath,"").replace(".JPG","_bb.JPG")
+        new_folder = im_file.replace(folderpath,"")
         ex_file =os.path.basename(new_folder)
         new_file = os.path.join(folder,new_folder.replace("\\","_out\\"))
+
+
         if os.path.exists(new_file):
             print(f"{new_file} exists")
             object = 1
             result = {
-                'file': im_file,
+                'img_id': im_file,
                 'detections': 'exists',
+                'labels': 'animal',
+                'object': object,
+                'Date': 0,
+                'Time': 0,
+                'Make': None,
+                'file': ex_file,
             }
         else:
-            pw_detect(im_file, new_file, threshold)
+            result = pw_detect(im_file, new_file, threshold)
+            result['file'] = ex_file
+            return result
 
     except Exception as e:
         #if not quiet:
@@ -54,7 +65,7 @@ def process_image(im_file,session_root,threshold):
         result = {
             'file': im_file,
             'failure': "FAILURE_INFER",
-            'object': 0
+            'object': -1
         }
         return result
 
@@ -124,10 +135,13 @@ def consumer_func(q,return_queue,session_root=None,threshold=None,image_size=Non
                                                           images_per_second,
                                                           im_file));
             sys.stdout.flush()
-        process_image(im_file,session_root,threshold)
+        result = process_image(im_file,session_root,threshold)
+        results.append(result)
         if verbose:
             print('Processed image {}'.format(im_file)); sys.stdout.flush()
         q.task_done()
+    
+    
 
 def run_detector_with_image_queue(image_files, threshold, session_root,
                                   quiet=False,image_size=None):
@@ -184,8 +198,22 @@ def run_detector_with_image_queue(image_files, threshold, session_root,
         q.join()
         print('Queue joined')
 
+        
+
         if not return_queue.empty():
             results = return_queue.get()
+
+            #print(results)
+            results_dataframe = pd.DataFrame(results)
+            results_dataframe_object = results_dataframe[results_dataframe['object'] > 0]
+            results_dataframe_corrupt = results_dataframe[results_dataframe['object'] < 0]
+            results_dataframe_object = results_dataframe_object
+            results_dataframe_object.to_csv(session_root + "_out\\" + os.path.basename(session_root) + "_output.csv", index=True)
+            print('Output csv file saved at detector_output.csv')
+            if len(results_dataframe_corrupt) > 0:
+                for corrupt in results_dataframe_corrupt['file'] :
+                    print('{} was corrupted'.format(corrupt))
+            results_dataframe_corrupt.to_csv(session_root+ "_out\\" + os.path.basename(session_root) + "_corrupt.csv", index=True)
 
             return results
         
@@ -213,3 +241,5 @@ use_threads_for_queue = True
 verbose = False
 
 run_detector_with_image_queue(image_files, threshold=threshold, session_root=session_root, quiet=False, image_size=None)
+
+

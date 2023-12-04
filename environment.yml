@@ -3,9 +3,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.8
-  - PytorchWildlife
   - pandas
   - omegaconf
   - humanfriendly
-  - cudnn
   
