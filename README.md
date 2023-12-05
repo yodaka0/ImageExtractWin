@@ -93,7 +93,7 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     pip install PytorchWildlife
     ```
 6. コードの改変
-    post_process.pyの34行目
+    ~\miniconda3\envs\pytorch-wildlife\Lib\site-packages\PytorchWildlife\utils\post_process.pyの34行目
    
         with sv.ImageSink(target_dir_path=output_dir, overwrite=True) as sink:
    
