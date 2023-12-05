@@ -213,7 +213,7 @@ def run_detector_with_image_queue(image_files, threshold, session_root,
             if len(results_dataframe_corrupt) > 0:
                 for corrupt in results_dataframe_corrupt['file'] :
                     print('{} was corrupted'.format(corrupt))
-            results_dataframe_corrupt.to_csv(session_root+ "_out\\" + os.path.basename(session_root) + "_corrupt.csv", index=True)
+                results_dataframe_corrupt.to_csv(session_root+ "_out\\" + os.path.basename(session_root) + "_corrupt.csv", index=True)
 
             return results
         
