@@ -1,4 +1,4 @@
-# MDetToolsForJCameraTraps
+# ImageExtractWin
 
 ## What's this：このプログラムについて
 
@@ -68,6 +68,8 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
 
     ```commandprompt
     cd {ImageExtractWinのパス}
+   例
+    cd project\ImageExtractWin-master
     ```
 
 3. create conda environment：conda環境の構築
@@ -114,6 +116,8 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
 
     ```commandprompt
     cd {ImageExtractWinのパス}
+    例
+    cd project\ImageExtractWin-master
     ```
     
 1. conda環境のアクティベート
