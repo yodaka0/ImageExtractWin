@@ -93,9 +93,12 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     pip install PytorchWildlife
     ```
 6. コードの改変
-    post_process.pyの３４行目
+    post_process.pyの34行目
+   
         with sv.ImageSink(target_dir_path=output_dir, overwrite=True) as sink:
+   
     =>
+   
         with sv.ImageSink(target_dir_path=output_dir, overwrite=False) as sink:
 <br />
 
@@ -131,10 +134,12 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
   MegaDetectorの実行
 
     ```commandprompt(conda)
-    python exec_mdet.py {カメラデータが入ったフォルダ}
+    python exec_mdet.py session_root={カメラデータが入ったフォルダ} threshold={検出の閾値}
     ```  
 
-    {カメラデータが入ったフォルダ}_outにcsvファイルとjsonファイルが保存される
+    thresholdは省略可(デフォルトは0.2)
+    
+    {カメラデータが入ったフォルダ}_outにcsvファイルが保存される
 
 
 
