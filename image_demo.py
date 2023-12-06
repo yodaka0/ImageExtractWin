@@ -68,12 +68,17 @@ def pw_detect(im_file, new_file, threshold=None):
     if contains_animal(result['labels']):
         pw_utils.save_detection_images(result, new_file_path)
         result['object'] = len(result['labels'])
-        img = Image.open(im_file)
-        exif_data = img._getexif()
-        date, time = exif_data[36867].split(' ')
-        result["Date"] = date
-        result["Time"] = time
-        result["Make"] = exif_data[271]
+        try:
+            img = Image.open(im_file)
+            exif_data = img._getexif()
+            date, time = exif_data[36867].split(' ')
+            result["Date"] = date
+            result["Time"] = time
+            result["Make"] = exif_data[271]
+        except:
+            result["Date"] = "None"
+            result["Time"] = "None"
+            result["Make"] = "None"
     else:
         result['object'] = 0
         result["Date"] = 0
