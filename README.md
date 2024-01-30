@@ -70,6 +70,7 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     cd {ImageExtractWinのパス}
    例
     cd project\ImageExtractWin-master
+    python make_batch.py
     ```
 
 3. create conda environment：conda環境の構築
@@ -108,7 +109,7 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
 
 ---
 
-## Usage：使い方
+## Usage：使い方1(use commandprompt)
 
 <br />
 
@@ -144,6 +145,15 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     thresholdは省略可(デフォルトは0.2)
     
     {カメラデータが入ったフォルダ}_outにcsvファイルが保存される
+
+## Usage：使い方2(use batch file)
+1.プロジェクトディレクトリへ移動
+    ImageExtractWinのフォルダを開いてdetect.batをコピー
+
+2.カメラ画像のフォルダへ移動
+    解析したい画像のフォルダを開いてdetect.batをペースト
+    detect.batをダブルクリック
+ 
 
 
 
