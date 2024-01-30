@@ -227,7 +227,7 @@ def run_detector_with_image_queue(image_files, threshold, session_root,
 
 cli_conf = OmegaConf.from_cli()  # command line interface config
 
-session_root = cli_conf.get("session_root")
+session_root = cli_conf.get("session_root").rstrip("\\")
 
 threshold = cli_conf.get("threshold")
 
