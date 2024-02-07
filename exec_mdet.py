@@ -7,6 +7,7 @@ from omegaconf import OmegaConf
 from multiprocessing import Process
 import multiprocessing
 from threading import Thread
+from natsort import natsorted
 
 from image_demo import pw_detect
 import visualization.visualization_utils as viz_utils
@@ -27,6 +28,8 @@ def find_image_files(folder_path):
         for file in files:
             if any(file.lower().endswith(ext) for ext in image_extensions):
                 image_files.append(os.path.join(root, file))
+
+    image_files = natsorted(image_files)
 
     return image_files
 
