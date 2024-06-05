@@ -22,9 +22,7 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     以下のコードはWindows 10 Proで動作確認しています。  
     動作確認時、静止画ファイル形式は.jpgを用いました。
 
-現段階ではGPU使用不可、一応記載
-
-* NVIDIA Driver(if use gpu)
+* NVIDIA Driver(if you use gpu)
     NVIDAドライバーをインストールする
 
     Please refer to [NVIDIA Driver Version Check](https://www.nvidia.com/Download/index.aspx?lang=en-us).
@@ -39,8 +37,8 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     # NVIDIA Driver installation check
     ```
 
-        If nvidia-smi does not work, Try Rebooting.  
-        nvidia-smiコマンドが動作しない場合は再起動してみてください。
+    If nvidia-smi does not work, Try Rebooting.  
+    nvidia-smiコマンドが動作しない場合は再起動してみてください。
 
 * Conda
 
@@ -90,19 +88,6 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     https://pytorch.org/ 
     例　conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
   
-5. PytorchWildlifeのインストール
-    Install through pip:
-    ```commandprompt
-    pip install PytorchWildlife
-    ```
-6. コードの改変
-    ~\miniconda3\envs\pwlife\Lib\site-packages\PytorchWildlife\utils\post_process.pyの34行目
-   
-        with sv.ImageSink(target_dir_path=output_dir, overwrite=True) as sink:
-   
-    =>
-   
-        with sv.ImageSink(target_dir_path=output_dir, overwrite=False) as sink:
 <br />
 
 
@@ -128,7 +113,7 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     ```
 
 
-2. gpuが使えるか確認(現在不必要)
+2. gpuが使えるか確認
 
     ```commandprompt(conda)
     python gpu_check.py
