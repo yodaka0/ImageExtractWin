@@ -75,7 +75,6 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
 
     ```commandprompt
     conda env create -f environment.yml
-    conda activate pwlife
     ```
 4. gpuを使う場合、以下のサイトを見てバージョンを合わせたものをインストールする
     CUDA Toolkit 12.3 Downloads
