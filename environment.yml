@@ -9,4 +9,5 @@ dependencies:
   - natsort
   - pip
   - pip:
-      - PytorchWildlife
+      - PytorchWildlife==1.0.2.4
+      - setuptools==69.5.1
