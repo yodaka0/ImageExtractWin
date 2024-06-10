@@ -61,7 +61,7 @@ def pw_detect(im_file, new_file, threshold=None):
     # Performing the detection on the single image
     result = detection_model.single_image_detection(transform(img), img.shape, im_file, conf_thres=threshold)
     
-    result['img_id'] = result['img_id'].replace("\\","/")
+    #result['img_id'] = result['img_id'].replace("\\","/")
 
     # Saving the detection results 
     #print(results['labels'])
