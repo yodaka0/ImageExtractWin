@@ -83,9 +83,10 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     cudnnのインストール(ログインが必要)
     https://developer.nvidia.com/rdp/cudnn-download
 
-    (必要なら)
-    https://pytorch.org/ 
-    例　conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+   ```commandprompt
+    pip uninstall torch torchvision torchaudio
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+    ```
   
 <br />
 
