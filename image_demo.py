@@ -26,9 +26,9 @@ def contains_animal(labels):
     return False
 
 def pw_detect(im_file, new_file, threshold=None):
-    if threshold is not float:
+    if not isinstance(threshold, float):
         threshold = 0.2
-    #print(f"Threshold: {threshold}")
+    print(f"Threshold: {threshold}")
 
     #file_path = im_file.replace("\\","/")
     #print(f"File path: {im_file}")
