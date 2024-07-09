@@ -33,9 +33,9 @@ def find_image_files(folder_path):
 
     return image_files
 
+
 def process_image(im_file,session_root,threshold):
-    #session_root = session_root.replace("\\\\","\\")
-    #print(session_root)
+
     try:
         folder = os.path.dirname(session_root)
         folderpath = folder + "\\"
@@ -60,10 +60,9 @@ def process_image(im_file,session_root,threshold):
         else:
             result = pw_detect(im_file, new_file, threshold)
             result['file'] = ex_file
-            return result
+        return result
 
     except Exception as e:
-        #if not quiet:
         print('Image {} cannot be processed. Exception: {}'.format(im_file, e))
         result = {
             'file': im_file,
@@ -101,7 +100,7 @@ def producer_func(q,image_files):
     print('Finished image loading'); sys.stdout.flush()
 
 
-def consumer_func(q,return_queue,session_root=None,threshold=None,image_size=None):
+def consumer_func(q,return_queue,session_root=None,threshold=None):
     """
     Consumer function; only used when using the (optional) image queue.
 
@@ -113,7 +112,6 @@ def consumer_func(q,return_queue,session_root=None,threshold=None,image_size=Non
 
     start_time = time.time()
     print(start_time)
-    #detector = load_detector(model_file)
     elapsed = time.time() - start_time
     print('Loaded model (before queueing) in {}'.format(humanfriendly.format_timespan(elapsed)))
     sys.stdout.flush()
@@ -130,13 +128,11 @@ def consumer_func(q,return_queue,session_root=None,threshold=None,image_size=Non
             return
         n_images_processed += 1
         im_file = r[0]
-        image = r[1]
+        #image = r[1]
         if verbose or ((n_images_processed % 10) == 0):
             elapsed = time.time() - start_time
             images_per_second = n_images_processed / elapsed
-            print('De-queued image {} ({}/s) ({})'.format(n_images_processed,
-                                                          images_per_second,
-                                                          im_file));
+            print('De-queued image {} ({}/s) ({})'.format(n_images_processed,images_per_second,im_file))
             sys.stdout.flush()
         result = process_image(im_file,session_root,threshold)
         results.append(result)
@@ -145,9 +141,7 @@ def consumer_func(q,return_queue,session_root=None,threshold=None,image_size=Non
         q.task_done()
     
     
-
-def run_detector_with_image_queue(image_files, threshold, session_root,
-                                  quiet=False,image_size=None):
+def run_detector_with_image_queue(image_files, threshold, session_root):
     """
     Driver function for the (optional) multiprocessing-based image queue; only used when --use_image_queue
     is specified.  Starts a reader process to read images from disk, but processes images in the
@@ -206,23 +200,21 @@ def run_detector_with_image_queue(image_files, threshold, session_root,
         if not return_queue.empty():
             results = return_queue.get()
 
-            #print(results)
             results_dataframe = pd.DataFrame(results)
             results_dataframe_object = results_dataframe[results_dataframe['object'] > 0]
             results_dataframe_corrupt = results_dataframe[results_dataframe['object'] < 0]
-            results_dataframe_object = results_dataframe_object
             results_dataframe_object.to_csv(session_root + "_out\\" + os.path.basename(session_root) + "_output.csv", index=True)
             print('Output csv file saved at detector_output.csv')
             if len(results_dataframe_corrupt) > 0:
                 for corrupt in results_dataframe_corrupt['file'] :
                     print('{} was corrupted'.format(corrupt))
                 results_dataframe_corrupt.to_csv(session_root+ "_out\\" + os.path.basename(session_root) + "_corrupt.csv", index=True)
-
-            return results
         
         else:
             print('Warning: no results returned from queue')
-            return []
+            
+        return
+        
     except Exception as e:
         print('Exception: {}'.format(e))
         raise
