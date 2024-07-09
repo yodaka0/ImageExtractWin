@@ -43,7 +43,6 @@ def process_image(im_file,session_root,threshold):
         ex_file =os.path.basename(new_folder)
         new_file = os.path.join(folder,new_folder.replace("\\","_out\\"))
 
-
         if os.path.exists(new_file):
             print(f"{new_file} exists")
             object = 1
@@ -173,15 +172,13 @@ def run_detector_with_image_queue(image_files, threshold, session_root):
 
         if run_separate_consumer_process:
             if use_threads_for_queue:
-                consumer = Thread(target=consumer_func,args=(q,return_queue, session_root,
-                                                            threshold,image_size,))
+                consumer = Thread(target=consumer_func,args=(q,return_queue, session_root,threshold))
             else:
-                consumer = Process(target=consumer_func,args=(q,return_queue, session_root,
-                                                            threshold,image_size,))
+                consumer = Process(target=consumer_func,args=(q,return_queue, session_root,threshold))
             consumer.daemon = True
             consumer.start()
         else:
-            consumer_func(q,return_queue,session_root,threshold,image_size,)
+            consumer_func(q,return_queue,session_root,threshold)
 
         producer.join()
         print('Producer finished')
@@ -235,6 +232,6 @@ max_queue_size = 10
 use_threads_for_queue = True
 verbose = False
 
-run_detector_with_image_queue(image_files, threshold=threshold, session_root=session_root, quiet=False, image_size=None)
+run_detector_with_image_queue(image_files, threshold=threshold, session_root=session_root, quiet=False)
 
 
