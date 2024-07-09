@@ -191,8 +191,7 @@ def run_detector_with_image_queue(image_files, threshold, session_root):
 
         q.join()
         print('Queue joined')
-
-        
+     
 
         if not return_queue.empty():
             results = return_queue.get()
@@ -232,6 +231,6 @@ max_queue_size = 10
 use_threads_for_queue = True
 verbose = False
 
-run_detector_with_image_queue(image_files, threshold=threshold, session_root=session_root, quiet=False)
+run_detector_with_image_queue(image_files, threshold=threshold, session_root=session_root)
 
 
