@@ -40,18 +40,17 @@ def pw_detect(im_file, new_file, threshold=None):
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
     #%% 
-    # Initializing the MegaDetectorV5 model for image detection
-    detection_model = pw_detection.MegaDetectorV5(device=DEVICE, pretrained=True)
+    # Initializing the MegaDetectorV6 model for image detection
+    detection_model = pw_detection.MegaDetectorV6(device=DEVICE, weights='../MDV6b-yolov9c.pt', pretrained=False) # For beta testing, you need to specify the path to the weights file.
 
     #%% Single image detection
     # Specifying the path to the target image TODO: Allow argparsing
 
     # Opening and converting the image to RGB format
-    img = np.array(Image.open(im_file).convert("RGB"))
+    #img = np.array(Image.open(im_file).convert("RGB"))
 
     # Initializing the Yolo-specific transform for the image
-    transform = pw_trans.MegaDetector_v5_Transform(target_size=detection_model.IMAGE_SIZE,
-                                                stride=detection_model.STRIDE)
+    #transform = pw_trans.MegaDetector_v5_Transform(target_size=detection_model.IMAGE_SIZE, stride=detection_model.STRIDE)
 
     #filename = os.path.basename(new_file)
     new_file_base = "\\" + os.path.basename(new_file) 
@@ -59,7 +58,7 @@ def pw_detect(im_file, new_file, threshold=None):
     
 
     # Performing the detection on the single image
-    result = detection_model.single_image_detection(transform(img), img.shape, im_file, conf_thres=threshold)
+    result = detection_model.single_image_detection(im_file)
     
     #result['img_id'] = result['img_id'].replace("\\","/")
 
