@@ -21,6 +21,7 @@ def create_new_structure(src_dir, dst_dir):
         new_dir = dst_dir + "\\" + dirs_name.replace("\\", "_out\\") + "_out"
         os.makedirs(new_dir, exist_ok=True)
 
+
 def find_image_files(folder_path):
     image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp']
     image_files = []
@@ -34,6 +35,7 @@ def find_image_files(folder_path):
 
     return image_files
 
+
 def save_detection_results(results, session_root, size, done=False):
     """
     Save detection results in JSON and CSV formats, and print the status of the output.
@@ -42,8 +44,8 @@ def save_detection_results(results, session_root, size, done=False):
     :param session_root: The root path for the session.
     """
     output_dir = session_root + "_out"
-    output_json_path = os.path.join(output_dir, os.path.basename(session_root) + "_output.json")
-    output_csv_path = os.path.join(output_dir, os.path.basename(session_root) + "_output.csv")
+    output_json_path = os.path.join(output_dir, os.path.basename(session_root) + "_output" + str(size) + ".json")
+    output_csv_path = os.path.join(output_dir, os.path.basename(session_root) + "_output" + str(size) + ".csv")
     
     # Save detection results in JSON format
     pw_utils.save_detection_json(
@@ -57,7 +59,7 @@ def save_detection_results(results, session_root, size, done=False):
         exclude_category_ids=[],  # Category IDs can be found in the definition of each model.
         exclude_file_path=None
     )
-    print('Output JSON file saved at {}_output{}.json'.format(os.path.basename(session_root), size))
+    print('Output JSON file saved at {}'.format(output_json_path))
     sys.stdout.flush()  # Ensure the print statement is immediately output
 
     # Convert results to DataFrame
@@ -66,7 +68,7 @@ def save_detection_results(results, session_root, size, done=False):
 
     # Save results DataFrame to CSV
     results_dataframe_object.to_csv(output_csv_path, index=True)
-    print('Output CSV file saved at {}_output{}.csv'.format(os.path.basename(session_root), size))
+    print('Output CSV file saved at {}'.format(output_csv_path))
     sys.stdout.flush()  # Ensure the print statement is immediately output
 
     # Check for and save corrupt results
@@ -83,6 +85,8 @@ def save_detection_results(results, session_root, size, done=False):
 
 def process_image(im_file,session_root,threshold):
 
+    skip = False
+
     try:
         folder = os.path.dirname(session_root)
         folderpath = folder + "\\"
@@ -90,7 +94,7 @@ def process_image(im_file,session_root,threshold):
         ex_file =os.path.basename(new_folder)
         new_file = os.path.join(folder,new_folder.replace("\\","_out\\"))
 
-        if os.path.exists(new_file):
+        if os.path.exists(new_file) and skip:
             print(f"{new_file} exists")
             object = 1
             result = {
@@ -116,6 +120,7 @@ def process_image(im_file,session_root,threshold):
             'object': -1
         }
         return result
+    
 
 def producer_func(q,image_files):
     """
@@ -170,6 +175,7 @@ def consumer_func(q, return_queue, session_root=None, threshold=None, checkpoint
         r = q.get()
         if r is None:
             q.task_done()
+            save_detection_results(results, session_root, size = len(results), done=True)
             return_queue.put(results)
             return
         n_images_processed += 1
@@ -240,13 +246,6 @@ def run_detector_with_image_queue(image_files, threshold, session_root, checkpoi
 
         q.join()
         print('Queue joined')
-     
-
-        if not return_queue.empty():
-            results = return_queue.get()
-            save_detection_results(results, session_root, size=length(results), done=True)
-        else:
-            print('Warning: no results returned from queue')
             
         return
         
@@ -271,6 +270,10 @@ image_files = find_image_files(session_root)
 max_queue_size = 10
 use_threads_for_queue = True
 verbose = False
+
+if isinstance(checkpoint, str) and checkpoint[0] == "r":
+    checkpoint = len(image_files) // int(checkpoint[1:])
+print(checkpoint)
 
 
 run_detector_with_image_queue(image_files, threshold, session_root, checkpoint)
