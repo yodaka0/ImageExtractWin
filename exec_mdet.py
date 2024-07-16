@@ -34,6 +34,50 @@ def find_image_files(folder_path):
 
     return image_files
 
+def save_detection_results(results, session_root, size):
+    """
+    Save detection results in JSON and CSV formats, and print the status of the output.
+
+    :param results: The detection results to be saved.
+    :param session_root: The root path for the session.
+    """
+    output_dir = session_root + "_out"
+    output_json_path = os.path.join(output_dir, os.path.basename(session_root) + "_output.json")
+    output_csv_path = os.path.join(output_dir, os.path.basename(session_root) + "_output.csv")
+    output_corrupt_csv_path = os.path.join(output_dir, os.path.basename(session_root) + "_corrupt.csv")
+    
+    # Save detection results in JSON format
+    pw_utils.save_detection_json(
+        results, 
+        output_json_path,
+        categories={
+            0: "animal",
+            1: "person",
+            2: "vehicle"
+        },
+        exclude_category_ids=[],  # Category IDs can be found in the definition of each model.
+        exclude_file_path=None
+    )
+    print('Output JSON file saved at {}_output{}.json'.format(os.path.basename(session_root), size))
+    sys.stdout.flush()  # Ensure the print statement is immediately output
+
+    # Convert results to DataFrame
+    results_dataframe = pd.DataFrame(results)
+    results_dataframe_object = results_dataframe[results_dataframe['object'] > 0]
+    results_dataframe_corrupt = results_dataframe[results_dataframe['object'] < 0]
+
+    # Save results DataFrame to CSV
+    results_dataframe_object.to_csv(output_csv_path, index=True)
+    print('Output CSV file saved at {}_output{}.csv'.format(os.path.basename(session_root), size))
+    sys.stdout.flush()  # Ensure the print statement is immediately output
+
+    # Check for and save corrupt results
+    if len(results_dataframe_corrupt) > 0:
+        for corrupt in results_dataframe_corrupt['file']:
+            print('{} was corrupted'.format(corrupt))
+        results_dataframe_corrupt.to_csv(output_corrupt_csv_path, index=True)
+        sys.stdout.flush()  # Ensure the print statement is immediately output
+
 
 def process_image(im_file,session_root,threshold):
 
@@ -134,6 +178,8 @@ def consumer_func(q,return_queue,session_root=None,threshold=None):
             images_per_second = n_images_processed / elapsed
             print('De-queued image {} ({}/s) ({})'.format(n_images_processed,images_per_second,im_file))
             sys.stdout.flush()
+        if ((n_images_processed % checkpoint) == 0):
+                 save_detection_results(results, session_root, size=n_images_processed)
         result = process_image(im_file,session_root,threshold)
         results.append(result)
         if verbose:
@@ -196,27 +242,7 @@ def run_detector_with_image_queue(image_files, threshold, session_root):
 
         if not return_queue.empty():
             results = return_queue.get()
-            # Saving the detection results in JSON format
-            pw_utils.save_detection_json(results, os.path.join(session_root + "_out", os.path.basename(session_root) + "_output.json"),
-                             categories={
-                                    0: "animal",
-                                    1: "person",
-                                    2: "vehicle"
-                                },
-                             exclude_category_ids=[], # Category IDs can be found in the definition of each model.
-                             exclude_file_path=None)
-            print('Output JSOn file saved at {}_output.json'.format(os.path.basename(session_root)))
-
-            results_dataframe = pd.DataFrame(results)
-            results_dataframe_object = results_dataframe[results_dataframe['object'] > 0]
-            results_dataframe_corrupt = results_dataframe[results_dataframe['object'] < 0]
-            results_dataframe_object.to_csv(session_root + "_out\\" + os.path.basename(session_root) + "_output.csv", index=True)
-            print('Output csv file saved at {}_output.csv'.format(os.path.basename(session_root)))
-            if len(results_dataframe_corrupt) > 0:
-                for corrupt in results_dataframe_corrupt['file'] :
-                    print('{} was corrupted'.format(corrupt))
-                results_dataframe_corrupt.to_csv(session_root+ "_out\\" + os.path.basename(session_root) + "_corrupt.csv", index=True)
-        
+            save_detection_results(results, session_root, size=length(results))
         else:
             print('Warning: no results returned from queue')
             
@@ -233,6 +259,8 @@ session_root = cli_conf.get("session_root").rstrip("\\")
 
 threshold = cli_conf.get("threshold")
 
+checkpoint = cli_conf.get("checkpoint")
+
 parent_dir = os.path.dirname(session_root) + "\\"
 create_new_structure(session_root, parent_dir)
 image_files = find_image_files(session_root)
@@ -241,6 +269,7 @@ image_files = find_image_files(session_root)
 max_queue_size = 10
 use_threads_for_queue = True
 verbose = False
+
 
 run_detector_with_image_queue(image_files, threshold=threshold, session_root=session_root)
 
