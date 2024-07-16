@@ -115,7 +115,8 @@ def process_image(im_file,session_root,threshold):
     except Exception as e:
         print('Image {} cannot be processed. Exception: {}'.format(im_file, e))
         result = {
-            'file': im_file,
+            'img_id': im_file,
+            'file': os.path.basename(im_file),
             'failure': "FAILURE_INFER",
             'object': -1
         }
