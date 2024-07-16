@@ -128,7 +128,8 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     ```  
 
     thresholdは省略可(デフォルトは0.2)
-    checkpointに入れた数のファイルを処理し終えるごとに途中経過が保存される(省略可)
+   
+    checkpointに入れた数のファイルを処理し終えるごとに途中経過が保存される(省略可)。r + x(数字)で全体のx分の一経過で保存(例：ファイル数200 r10　で20ファイルごとに保存)
     
     {カメラデータが入ったフォルダ}_outにjsonファイルとcsvファイルが保存される
 
