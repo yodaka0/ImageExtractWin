@@ -124,12 +124,13 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
   MegaDetectorの実行
 
     ```commandprompt(conda)
-    python exec_mdet.py session_root={カメラデータが入ったフォルダ} threshold={検出の閾値}
+    python exec_mdet.py session_root={カメラデータが入ったフォルダ} threshold={検出の閾値} checkpoint={途中で保存するファイル数}
     ```  
 
     thresholdは省略可(デフォルトは0.2)
+    checkpointに入れた数のファイルを処理し終えるごとに途中経過が保存される(省略可)
     
-    {カメラデータが入ったフォルダ}_outにcsvファイルが保存される
+    {カメラデータが入ったフォルダ}_outにjsonファイルとcsvファイルが保存される
 
 ## Usage：使い方2(use batch file)
 1.プロジェクトディレクトリへ移動
