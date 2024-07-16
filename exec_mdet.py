@@ -11,6 +11,7 @@ from natsort import natsorted
 
 from image_demo import pw_detect
 import visualization.visualization_utils as viz_utils
+from PytorchWildlife import utils as pw_utils
 
 
 
@@ -195,12 +196,22 @@ def run_detector_with_image_queue(image_files, threshold, session_root):
 
         if not return_queue.empty():
             results = return_queue.get()
+            # Saving the detection results in JSON format
+            pw_utils.save_detection_json(results, os.path.join(session_root + "_out", os.path.basename(session_root) + "_output.json"),
+                             categories={
+                                    0: "animal",
+                                    1: "person",
+                                    2: "vehicle"
+                                },
+                             exclude_category_ids=[], # Category IDs can be found in the definition of each model.
+                             exclude_file_path=None)
+            print('Output JSOn file saved at {}_output.json'.format(os.path.basename(session_root)))
 
             results_dataframe = pd.DataFrame(results)
             results_dataframe_object = results_dataframe[results_dataframe['object'] > 0]
             results_dataframe_corrupt = results_dataframe[results_dataframe['object'] < 0]
             results_dataframe_object.to_csv(session_root + "_out\\" + os.path.basename(session_root) + "_output.csv", index=True)
-            print('Output csv file saved at detector_output.csv')
+            print('Output csv file saved at {}_output.csv'.format(os.path.basename(session_root)))
             if len(results_dataframe_corrupt) > 0:
                 for corrupt in results_dataframe_corrupt['file'] :
                     print('{} was corrupted'.format(corrupt))
