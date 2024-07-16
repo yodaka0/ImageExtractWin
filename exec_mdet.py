@@ -34,7 +34,7 @@ def find_image_files(folder_path):
 
     return image_files
 
-def save_detection_results(results, session_root, size):
+def save_detection_results(results, session_root, size, done=False):
     """
     Save detection results in JSON and CSV formats, and print the status of the output.
 
@@ -44,7 +44,6 @@ def save_detection_results(results, session_root, size):
     output_dir = session_root + "_out"
     output_json_path = os.path.join(output_dir, os.path.basename(session_root) + "_output.json")
     output_csv_path = os.path.join(output_dir, os.path.basename(session_root) + "_output.csv")
-    output_corrupt_csv_path = os.path.join(output_dir, os.path.basename(session_root) + "_corrupt.csv")
     
     # Save detection results in JSON format
     pw_utils.save_detection_json(
@@ -64,7 +63,6 @@ def save_detection_results(results, session_root, size):
     # Convert results to DataFrame
     results_dataframe = pd.DataFrame(results)
     results_dataframe_object = results_dataframe[results_dataframe['object'] > 0]
-    results_dataframe_corrupt = results_dataframe[results_dataframe['object'] < 0]
 
     # Save results DataFrame to CSV
     results_dataframe_object.to_csv(output_csv_path, index=True)
@@ -72,11 +70,15 @@ def save_detection_results(results, session_root, size):
     sys.stdout.flush()  # Ensure the print statement is immediately output
 
     # Check for and save corrupt results
-    if len(results_dataframe_corrupt) > 0:
-        for corrupt in results_dataframe_corrupt['file']:
-            print('{} was corrupted'.format(corrupt))
-        results_dataframe_corrupt.to_csv(output_corrupt_csv_path, index=True)
-        sys.stdout.flush()  # Ensure the print statement is immediately output
+    
+    if done:
+        results_dataframe_corrupt = results_dataframe[results_dataframe['object'] < 0]
+        if len(results_dataframe_corrupt) > 0:
+            for corrupt in results_dataframe_corrupt['file']:
+                print('{} was corrupted'.format(corrupt))
+            output_corrupt_csv_path = os.path.join(output_dir, os.path.basename(session_root) + "_corrupt.csv")
+            results_dataframe_corrupt.to_csv(output_corrupt_csv_path, index=True)
+            sys.stdout.flush()  # Ensure the print statement is immediately output
 
 
 def process_image(im_file,session_root,threshold):
@@ -144,7 +146,7 @@ def producer_func(q,image_files):
     print('Finished image loading'); sys.stdout.flush()
 
 
-def consumer_func(q,return_queue,session_root=None,threshold=None):
+def consumer_func(q, return_queue, session_root=None, threshold=None, checkpoint=None):
     """
     Consumer function; only used when using the (optional) image queue.
 
@@ -178,8 +180,8 @@ def consumer_func(q,return_queue,session_root=None,threshold=None):
             images_per_second = n_images_processed / elapsed
             print('De-queued image {} ({}/s) ({})'.format(n_images_processed,images_per_second,im_file))
             sys.stdout.flush()
-        if ((n_images_processed % checkpoint) == 0):
-                 save_detection_results(results, session_root, size=n_images_processed)
+        if checkpoint is not None and checkpoint > 0 and ((n_images_processed % checkpoint) == 0):
+                 save_detection_results(results, session_root, size=n_images_processed, done=False)
         result = process_image(im_file,session_root,threshold)
         results.append(result)
         if verbose:
@@ -187,7 +189,7 @@ def consumer_func(q,return_queue,session_root=None,threshold=None):
         q.task_done()
     
     
-def run_detector_with_image_queue(image_files, threshold, session_root):
+def run_detector_with_image_queue(image_files, threshold, session_root, checkpoint):
     """
     Driver function for the (optional) multiprocessing-based image queue; only used when --use_image_queue
     is specified.  Starts a reader process to read images from disk, but processes images in the
@@ -219,13 +221,13 @@ def run_detector_with_image_queue(image_files, threshold, session_root):
 
         if run_separate_consumer_process:
             if use_threads_for_queue:
-                consumer = Thread(target=consumer_func,args=(q,return_queue, session_root,threshold))
+                consumer = Thread(target=consumer_func,args=(q,return_queue, session_root, threshold, checkpoint))
             else:
-                consumer = Process(target=consumer_func,args=(q,return_queue, session_root,threshold))
+                consumer = Process(target=consumer_func,args=(q,return_queue, session_root, threshold, checkpoint))
             consumer.daemon = True
             consumer.start()
         else:
-            consumer_func(q,return_queue,session_root,threshold)
+            consumer_func(q, return_queue, session_root, threshold, checkpoint)
 
         producer.join()
         print('Producer finished')
@@ -242,7 +244,7 @@ def run_detector_with_image_queue(image_files, threshold, session_root):
 
         if not return_queue.empty():
             results = return_queue.get()
-            save_detection_results(results, session_root, size=length(results))
+            save_detection_results(results, session_root, size=length(results), done=True)
         else:
             print('Warning: no results returned from queue')
             
@@ -271,6 +273,6 @@ use_threads_for_queue = True
 verbose = False
 
 
-run_detector_with_image_queue(image_files, threshold=threshold, session_root=session_root)
+run_detector_with_image_queue(image_files, threshold, session_root, checkpoint)
 
 
