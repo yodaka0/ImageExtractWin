@@ -95,25 +95,24 @@ def process_image(im_file,session_root,threshold):
         folder = os.path.dirname(session_root)
         folderpath = folder + "\\"
         new_folder = im_file.replace(folderpath,"")
-        ex_file =os.path.basename(new_folder)
+        ex_file = os.path.basename(new_folder)
         new_file = os.path.join(folder,new_folder.replace("\\","_out\\"))
-
+        
         if os.path.exists(new_file) and skip:
             print(f"{new_file} exists")
-            object = 1
             result = {
                 'img_id': im_file,
                 'detections': det_null,
                 'labels': 'animal',
-                'object': object,
-                'Date': 0,
-                'Time': 0,
+                'object': 1,
+                'eventStart': 0,
+                'eventEnd': 0,
                 'Make': None,
-                'file': ex_file,
             }
         else:
             result = pw_detect(im_file, new_file, threshold)
-            result['file'] = ex_file
+        result['deploymentID'] = os.path.basename(session_root)
+        result['file'] = ex_file
         return result
 
     except Exception as e:
@@ -122,7 +121,6 @@ def process_image(im_file,session_root,threshold):
             'img_id': im_file,
             'detections': det_null,
             'file': os.path.basename(im_file),
-            'failure': "FAILURE_INFER",
             'object': -1
         }
         return result
