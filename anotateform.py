@@ -7,10 +7,10 @@ from tkinter import ttk
 
 
 class CsvEditor:
-    def __init__(self, root, spieces):
-        self.user_name = input("Please input your name: ")
-        self.file_name = input("Please input the file name: ")
+    def __init__(self, root, spieces,user_name,file_name):
         self.root = root
+        self.user_name = user_name
+        self.file_name = file_name
         self.frame = tk.Frame(self.root)
         self.frame.pack()
 
@@ -115,9 +115,6 @@ class CsvEditor:
                 input_dict[column] = input_data  # Save the input data to the dictionary
                 self.data.at[self.current_row, column] = input_data
             print(f"scientificName was set to {self.data.at[self.current_row, 'scientificName']} at {now}")
-            """input_dict["classificationTimestamp"] = str(now)
-            input_dict["classificationMethod"] = "human"
-            input_dict["classifiedBy"] = self.user_name"""
             # Save classificationTimestamp and classifiedBy to self.data as well
             self.data.at[self.current_row, "classificationTimestamp"] = str(now)
             self.data.at[self.current_row, "classifiedBy"] = self.user_name
@@ -125,10 +122,10 @@ class CsvEditor:
             print(f"Next button was clicked at {now}")
             print(self.data.iloc[self.current_row])
             if self.current_row < len(self.data) - 1:
-                time_current = datetime.datetime.strptime(self.data.at[self.current_row, 'Time'], "%H:%M:%S")
-                time_next = datetime.datetime.strptime(self.data.at[self.current_row+1, 'Time'], "%H:%M:%S")
+                time_current = datetime.datetime.strptime(self.data.at[self.current_row, 'eventEnd'], "%Y:%m:%d %H:%M:%S")
+                time_next = datetime.datetime.strptime(self.data.at[self.current_row+1, 'eventStart'], "%Y:%m:%d %H:%M:%S")
                 time_diff = (time_next - time_current).total_seconds()
-                if  abs(time_diff) < 60:
+                if  abs(time_diff) < 120:
                     self.data.at[self.current_row+1, 'scientificName'] = self.data.at[self.current_row, 'scientificName']
                 self.current_row += 1
                 self.update_form()
@@ -213,9 +210,11 @@ class CsvEditor:
 
 
 if __name__ == "__main__":
+    user_name = input("Please input your name: ")
+    file_name = input("Please input the file name: ")
     spieces = pd.read_csv("spieces_name.csv")
     root = tk.Tk()
-    editor = CsvEditor(root, spieces)
+    editor = CsvEditor(root, spieces,user_name,file_name)
     root.protocol("WM_DELETE_WINDOW", editor.on_close)
     try:
         root.mainloop()
