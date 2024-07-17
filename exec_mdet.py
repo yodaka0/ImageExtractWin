@@ -3,6 +3,7 @@ import sys
 import time
 import humanfriendly
 import pandas as pd
+import numpy as np
 from omegaconf import OmegaConf
 from multiprocessing import Process
 import multiprocessing
@@ -12,6 +13,7 @@ from natsort import natsorted
 from image_demo import pw_detect
 import visualization.visualization_utils as viz_utils
 from PytorchWildlife import utils as pw_utils
+from supervision.detection.core import Detections
 
 
 
@@ -87,6 +89,8 @@ def process_image(im_file,session_root,threshold):
 
     skip = False
 
+    det_null = Detections(xyxy=np.empty((0, 4), dtype=np.float32), mask=None, 
+                        confidence=np.array([], dtype=np.float32), class_id=np.array([], dtype=np.int32), tracker_id=None)
     try:
         folder = os.path.dirname(session_root)
         folderpath = folder + "\\"
@@ -99,7 +103,7 @@ def process_image(im_file,session_root,threshold):
             object = 1
             result = {
                 'img_id': im_file,
-                'detections': 'exists',
+                'detections': det_null,
                 'labels': 'animal',
                 'object': object,
                 'Date': 0,
@@ -116,6 +120,7 @@ def process_image(im_file,session_root,threshold):
         print('Image {} cannot be processed. Exception: {}'.format(im_file, e))
         result = {
             'img_id': im_file,
+            'detections': det_null,
             'file': os.path.basename(im_file),
             'failure': "FAILURE_INFER",
             'object': -1
@@ -278,5 +283,3 @@ print(checkpoint)
 
 
 run_detector_with_image_queue(image_files, threshold, session_root, checkpoint)
-
-
