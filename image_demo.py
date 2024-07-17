@@ -19,11 +19,6 @@ from PytorchWildlife.data import transforms as pw_trans
 #from PytorchWildlife.data import datasets as pw_data 
 from PytorchWildlife import utils as pw_utils
 
-def contains_animal(labels):
-    for label in labels:
-        if 'animal' in label:
-            return True
-    return False
 
 def pw_detect(im_file, new_file, threshold=None):
 
@@ -32,12 +27,6 @@ def pw_detect(im_file, new_file, threshold=None):
     if not isinstance(threshold, float):
         threshold = 0.2
     
-
-    #file_path = im_file.replace("\\","/")
-    #print(f"File path: {im_file}")
-    #im_file_path = im_file.replace("\\","/")
-    #new_file_path = new_file_path.replace("\\","/")
-    #print(f"New file path: {new_file}")
     #%% 
     # Setting the device to use for computations ('cuda' indicates GPU)
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -69,35 +58,21 @@ def pw_detect(im_file, new_file, threshold=None):
     #result['img_id'] = result['img_id'].replace("\\","/")
 
     # Saving the detection results 
-    #print(results['labels'])
-    if contains_animal(result['labels']):
-        pw_utils.save_detection_images(result, new_file_path)
-        result['object'] = len(result['labels'])
-        try:
-            img = Image.open(im_file)
-            exif_data = img._getexif()
-            date, time = exif_data[36867].split(' ')
-            result["Date"] = date
-            result["Time"] = time
-            result["Make"] = exif_data[271]
-        except:
-            result["Date"] = "None"
-            result["Time"] = "None"
-            result["Make"] = "None"
-    else:
-        result['object'] = 0
-        result["Date"] = 0
-        result["Time"] = 0
+    animal_n = sum('animal' in item for item in result['labels'])
+    print(animal_n)
+    result['object'] = animal_n
+    try:
+        img = Image.open(im_file)
+        exif_data = img._getexif()
+        result['eventStart']  = exif_data[36867]
+        result['eventEnd'] = exif_data[36867]
+        result["Make"] = exif_data[271]
+    except:
+        result['eventStart'] = "None"
+        result['eventEnd'] = "None"
         result["Make"] = None
 
-    #%% Output to cropped images
-    # Saving the detected objects as cropped images
-    #pw_utils.save_crop_images(results, "crop_output")
-
-    #%% Output to JSON results
-    # Saving the detection results in JSON format
-    """output_folder = session_root + "_out"
-    pw_utils.save_detection_json(results, output_folder,
-                                categories=detection_model.CLASS_NAMES)"""
+    if animal_n > 0:
+        pw_utils.save_detection_images(result, new_file_path)
     
     return result
