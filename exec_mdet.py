@@ -4,7 +4,7 @@ import time
 import humanfriendly
 import pandas as pd
 import numpy as np
-from omegaconf import OmegaConf
+#from omegaconf import OmegaConf
 from multiprocessing import Process
 import multiprocessing
 from threading import Thread
@@ -15,14 +15,10 @@ import visualization.visualization_utils as viz_utils
 from PytorchWildlife import utils as pw_utils
 from supervision.detection.core import Detections
 
-
-
-def create_new_structure(src_dir, dst_dir):
-    for dir, _ ,_ in os.walk(src_dir):
-        dirs_name = dir.replace(dst_dir, "")
-        new_dir = dst_dir + "\\" + dirs_name.replace("\\", "_out\\") + "_out"
-        os.makedirs(new_dir, exist_ok=True)
-
+# Number of images to pre-fetch
+max_queue_size = 10
+use_threads_for_queue = True
+verbose = False
 
 def find_image_files(folder_path):
     image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp']
@@ -256,28 +252,3 @@ def run_detector_with_image_queue(image_files, threshold, session_root, checkpoi
     except Exception as e:
         print('Exception: {}'.format(e))
         raise
-
-
-cli_conf = OmegaConf.from_cli()  # command line interface config
-
-session_root = cli_conf.get("session_root").rstrip("\\")
-
-threshold = cli_conf.get("threshold")
-
-checkpoint = cli_conf.get("checkpoint")
-
-parent_dir = os.path.dirname(session_root) + "\\"
-create_new_structure(session_root, parent_dir)
-image_files = find_image_files(session_root)
-
-# Number of images to pre-fetch
-max_queue_size = 10
-use_threads_for_queue = True
-verbose = False
-
-if isinstance(checkpoint, str) and checkpoint[0] == "r":
-    checkpoint = len(image_files) // int(checkpoint[1:])
-print(checkpoint)
-
-
-run_detector_with_image_queue(image_files, threshold, session_root, checkpoint)
