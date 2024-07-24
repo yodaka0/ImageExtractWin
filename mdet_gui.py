@@ -1,13 +1,12 @@
 import os
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog
-#from omegaconf import OmegaConf
 from exec_mdet import find_image_files, run_detector_with_image_queue
 
 def create_new_structure(src_dir, dst_dir):
     for dir, _ ,_ in os.walk(src_dir):
         dirs_name = dir.replace(dst_dir, "")
-        new_dir = dst_dir + "\\" + dirs_name.replace("\\", "_out\\") + "_out"
+        new_dir = dst_dir + "/" + dirs_name.replace("/", "_out/") + "_out"
         print("output directory is ", new_dir)
         os.makedirs(new_dir, exist_ok=True)
 
