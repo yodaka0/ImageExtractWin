@@ -121,7 +121,6 @@ def main():
     # Update conda environment. If it doesn't exist, create conda environment
     try:
         # If the environment already exists, update it
-        print("Environment already exists, updating...")
         run_command("conda env update -f environment.yml")
     except subprocess.CalledProcessError:
         # If the environment doesn't exist, create it
