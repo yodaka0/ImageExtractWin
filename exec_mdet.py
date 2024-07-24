@@ -89,10 +89,10 @@ def process_image(im_file,session_root,threshold):
                         confidence=np.array([], dtype=np.float32), class_id=np.array([], dtype=np.int32), tracker_id=None)
     try:
         folder = os.path.dirname(session_root)
-        folderpath = folder + "\\"
+        folderpath = folder + "/"
         new_folder = im_file.replace(folderpath,"")
         ex_file = os.path.basename(new_folder)
-        new_file = os.path.join(folder,new_folder.replace("\\","_out\\"))
+        new_file = os.path.join(folder,new_folder.replace("/","_out/"))
         
         if os.path.exists(new_file) and skip:
             print(f"{new_file} exists")
