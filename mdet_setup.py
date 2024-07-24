@@ -80,13 +80,11 @@ def main():
         print("Conda is not installed, installing...")
         if platform.system() == 'Windows':
             installer_url = 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe'
-            installer_path = 'Miniconda3-latest-Windows-x86_64.exe'
         elif platform.system() == 'Darwin':  # macOS
             installer_url = 'https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh'
-            installer_path = 'Miniconda3-latest-MacOSX-x86_64.sh'
         else:  # Linux
             installer_url = 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh'
-            installer_path = 'Miniconda3-latest-Linux-x86_64.sh'
+        installer_path = os.path.basename(installer_url)
 
         download_miniconda(installer_url, installer_path)
         install_miniconda(installer_path)
@@ -113,7 +111,6 @@ def main():
 
     # Run the make_batch.py script
     try:
-        run_command("python make_batch.py")
         run_command("python make_batch_gui.py")
     except subprocess.CalledProcessError:
         print("Warning: make batch file failed.")
