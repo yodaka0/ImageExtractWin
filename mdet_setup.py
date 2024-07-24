@@ -59,7 +59,7 @@ def clone_repository(repo_url,program_dir):
     os.makedirs(os.path.expanduser(program_dir), exist_ok=True)
     try:
         # clone branch
-        run_command(f"git clone -b gui {repo_url} {program_dir}")
+        run_command(f"git clone -b gui_mac {repo_url} {program_dir}")
     except subprocess.CalledProcessError:
         run_command(f"git clone {repo_url} {program_dir}")
 
@@ -96,8 +96,8 @@ def main():
             print("Conda initialized successfully")
 
     repo_url = "https://github.com/yodaka0/ImageExtractWin.git"
-    zip_url = "https://github.com/yodaka0/ImageExtractWin/archive/refs/heads/gui.zip"
-    project_dir = "ImageExtractWin-gui"
+    zip_url = "https://github.com/yodaka0/ImageExtractWin/archive/refs/heads/gui_mac.zip"
+    project_dir = "ImageExtractWin-gui_mac"
 
     # Clone the repository and change to the project directory
     try:
