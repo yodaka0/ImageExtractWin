@@ -8,6 +8,8 @@ bat_contents = '''
 (
 cd {}
 
+conda init
+
 conda activate pwlife
 
 python mdet_gui.py
@@ -24,7 +26,7 @@ with open('detect_gui.bat', 'w') as file:
 
 
 def create_shortcuts_in_directory(directory):
-    desktop = os.path.join(os.path.join(os.environ['USERPROFILE']), 'Desktop')
+    desktop = os.path.join(os.environ['USERPROFILE'], 'Desktop')
     shortcut_path = os.path.join(desktop, "detect_gui.lnk")
     target_path = os.path.join(directory, "detect_gui.bat")
 
