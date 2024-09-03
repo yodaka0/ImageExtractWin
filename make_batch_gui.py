@@ -8,8 +8,6 @@ bat_contents = '''
 (
 cd {}
 
-conda init
-
 conda activate pwlife
 
 python mdet_gui.py
