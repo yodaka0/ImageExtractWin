@@ -3,7 +3,7 @@ import subprocess
 
 current_dir = os.getcwd()
 
-bat_contents = '''
+mdet_bat_contents = '''
 @echo on
 (
 cd {}
@@ -18,9 +18,24 @@ pause
 )
 '''.format(current_dir)
 
+ano_bat_contents = '''
+@echo on
+(
+cd {}
+cd anotate
+
+python anotateform_soft.py
+
+pause
+)
+'''.format(current_dir)
+
 # ファイルを書き込みモードで開く
 with open('detect_gui.bat', 'w') as file:
-    file.write(bat_contents) 
+    file.write(mdet_bat_contents) 
+
+with open('anotation.bat', 'w') as file:
+    file.write(ano_bat_contents) 
 
 
 def create_shortcuts_in_directory(directory):
