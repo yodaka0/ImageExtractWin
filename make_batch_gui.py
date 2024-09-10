@@ -34,14 +34,14 @@ pause
 with open('detect_gui.bat', 'w') as file:
     file.write(mdet_bat_contents) 
 
-with open('anotation.bat', 'w') as file:
+with open('anotation_form.bat', 'w') as file:
     file.write(ano_bat_contents) 
 
 
-def create_shortcuts_in_directory(directory):
+def create_shortcuts_in_directory(directory,bat_name):
     desktop = os.path.join(os.environ['USERPROFILE'], 'Desktop')
-    shortcut_path = os.path.join(desktop, "detect_gui.lnk")
-    target_path = os.path.join(directory, "detect_gui.bat")
+    shortcut_path = os.path.join(desktop, bat_name, ".lnk")
+    target_path = os.path.join(directory, bat_name, ".bat")
 
     vbs_script = f"""
 Set WshShell = WScript.CreateObject("WScript.Shell")
@@ -60,5 +60,6 @@ Shortcut.Save
 
 
 if __name__ == "__main__":
-    create_shortcuts_in_directory(current_dir)
+    create_shortcuts_in_directory(current_dir,"detect_gui")
+    create_shortcuts_in_directory(current_dir,"anotation_form")
     print("Shortcuts created successfully on the desktop.")
