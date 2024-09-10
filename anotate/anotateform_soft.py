@@ -100,6 +100,7 @@ class CsvEditor:
                 self.column_name_num = {col: num for num, col in enumerate(self.data.columns)}
                 #print(self.column_name_num)
                 self.update_form()
+
         except Exception as e:
             print(e)
             raise
@@ -108,6 +109,14 @@ class CsvEditor:
     def load_csv(self):
         filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         self.load(filepath)
+        try:
+            if os.path.exists("data/position.json"):
+                saved_position = json.load(open("data/position.json", "r"))
+                if saved_position["file"] == filepath:
+                    self.go_to_row(saved_position["position"])
+        except:
+            print("No saved position found.")
+            pass
 
     
     def load_json(self):
@@ -232,14 +241,19 @@ class CsvEditor:
         # form a dataframe from the list of dicts
         self_anotate_csv = self.anotated_file.replace(".json", ".csv")
         self.data.to_csv(self_anotate_csv, index=False)
+        #overwrite current_row name and self_anotate_csv
+        with open("data/position.json", "w") as f:
+            json.dump({"position": self.data.at[self.current_row, "img_id"], "file": self_anotate_csv}, f)
 
     def on_close(self):
         self.save_on_interrupt()
         self.root.destroy()
 
-    def go_to_row(self):
-        # ユーザーが入力した値を取得します。
-        input_value = self.input_field.get()
+    def go_to_row(self, input_value=None):
+
+        if input_value is None:
+            # ユーザーが入力した値を取得します。
+            input_value = self.input_field.get()
         # 入力値に対応する行を検索します。
         matching_rows = self.data[self.data["img_id"] == input_value]
         #print(matching_rows)
