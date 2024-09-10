@@ -52,7 +52,8 @@ def save_detection_results(results, session_root, size, done=False):
         categories={
             0: "animal",
             1: "person",
-            2: "vehicle"
+            2: "vehicle",
+            3: "false_positive",
         },
         exclude_category_ids=[],  # Category IDs can be found in the definition of each model.
         exclude_file_path=None
@@ -81,9 +82,7 @@ def save_detection_results(results, session_root, size, done=False):
             sys.stdout.flush()  # Ensure the print statement is immediately output
 
 
-def process_image(im_file,session_root,threshold):
-
-    skip = False
+def process_image(im_file,session_root, threshold, prev_result=None, diff_reasoning=False, skip=False):
 
     det_null = Detections(xyxy=np.empty((0, 4), dtype=np.float32), mask=None, 
                         confidence=np.array([], dtype=np.float32), class_id=np.array([], dtype=np.int32), tracker_id=None)
@@ -106,7 +105,7 @@ def process_image(im_file,session_root,threshold):
                 'Make': None,
             }
         else:
-            result = pw_detect(im_file, new_file, threshold)
+            result = pw_detect(im_file, new_file, threshold, prev_result['detections'], diff_reasoning)
         result['deploymentID'] = os.path.basename(session_root)
         result['file'] = ex_file
         return result
@@ -151,7 +150,7 @@ def producer_func(q,image_files):
     print('Finished image loading'); sys.stdout.flush()
 
 
-def consumer_func(q, return_queue, session_root=None, threshold=None, checkpoint=None):
+def consumer_func(q, return_queue, session_root=None, threshold=None, checkpoint=None, diff_reasoning=False, skip=False):
     """
     Consumer function; only used when using the (optional) image queue.
 
@@ -188,14 +187,15 @@ def consumer_func(q, return_queue, session_root=None, threshold=None, checkpoint
             sys.stdout.flush()
         if checkpoint is not None and checkpoint > 0 and ((n_images_processed % checkpoint) == 0):
                  save_detection_results(results, session_root, size=n_images_processed, done=False)
-        result = process_image(im_file,session_root,threshold)
+        prev_result = None if len(results) == 0 else results[-1]
+        result = process_image(im_file,session_root,threshold,prev_result,diff_reasoning,skip)
         results.append(result)
         if verbose:
             print('Processed image {}'.format(im_file)); sys.stdout.flush()
         q.task_done()
     
     
-def run_detector_with_image_queue(image_files, threshold, session_root, checkpoint):
+def run_detector_with_image_queue(image_files, threshold, session_root, checkpoint, diff_reasoning, skip):
     """
     Driver function for the (optional) multiprocessing-based image queue; only used when --use_image_queue
     is specified.  Starts a reader process to read images from disk, but processes images in the
@@ -227,13 +227,13 @@ def run_detector_with_image_queue(image_files, threshold, session_root, checkpoi
 
         if run_separate_consumer_process:
             if use_threads_for_queue:
-                consumer = Thread(target=consumer_func,args=(q,return_queue, session_root, threshold, checkpoint))
+                consumer = Thread(target=consumer_func,args=(q,return_queue, session_root, threshold, checkpoint, diff_reasoning, skip))
             else:
-                consumer = Process(target=consumer_func,args=(q,return_queue, session_root, threshold, checkpoint))
+                consumer = Process(target=consumer_func,args=(q,return_queue, session_root, threshold, checkpoint, diff_reasoning, skip)) 
             consumer.daemon = True
             consumer.start()
         else:
-            consumer_func(q, return_queue, session_root, threshold, checkpoint)
+            consumer_func(q, return_queue, session_root, threshold, checkpoint, diff_reasoning, skip)
 
         producer.join()
         print('Producer finished')

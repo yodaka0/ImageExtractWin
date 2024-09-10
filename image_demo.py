@@ -20,7 +20,7 @@ from PytorchWildlife.data import transforms as pw_trans
 from PytorchWildlife import utils as pw_utils
 
 
-def pw_detect(im_file, new_file, threshold=None):
+def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasoning=False):
 
     verbose = False
 
@@ -57,10 +57,28 @@ def pw_detect(im_file, new_file, threshold=None):
     
     #result['img_id'] = result['img_id'].replace("\\","/")
 
+    if diff_reasoning:
+        # extract values of bounding boxes from the result dictionary
+        bounding_boxes = result['detections'].xyxy
+        prev_bounding_boxes = pre_detects.xyxy
+        # if bounding boxes heardly change, then animal change into blank
+        if len(bounding_boxes) == len(prev_bounding_boxes):
+            for i in range(len(bounding_boxes)):
+                if (abs(bounding_boxes[i][0] - prev_bounding_boxes[i][0]) < 5 and
+                    abs(bounding_boxes[i][1] - prev_bounding_boxes[i][1]) < 5 and
+                    abs(bounding_boxes[i][2] - prev_bounding_boxes[i][2]) < 5 and
+                    abs(bounding_boxes[i][3] - prev_bounding_boxes[i][3]) < 5):
+                    print(f"bounding_boxes:{bounding_boxes[i]}")
+                    print(f"prev_bounding_boxes:{prev_bounding_boxes[i]}")
+                    print("bounding box not move, change to blank")
+                    #transform animal in the labels to 'blank'
+                    result['labels'][i] = "blank"
+
     # Saving the detection results 
     animal_n = sum('animal' in item for item in result['labels'])
     print(animal_n)
     result['object'] = animal_n
+
     try:
         img = Image.open(im_file)
         exif_data = img._getexif()
