@@ -4,8 +4,6 @@ channels:
 dependencies:
   - python=3.9
   - pandas
-  - omegaconf
-  - humanfriendly
   - natsort
   - setuptools==69.5.1
   - pip

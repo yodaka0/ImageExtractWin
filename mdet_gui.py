@@ -1,15 +1,29 @@
 import os
 import tkinter as tk
-from tkinter import filedialog, messagebox, simpledialog
-#from omegaconf import OmegaConf
-from exec_mdet import find_image_files, run_detector_with_image_queue
+from tkinter import filedialog, messagebox
+from natsort import natsorted
+from exec_mdet import ExecMdet
 
 def create_new_structure(src_dir, dst_dir):
     for dir, _ ,_ in os.walk(src_dir):
         dirs_name = dir.replace(dst_dir, "")
-        new_dir = dst_dir + "\\" + dirs_name.replace("\\", "_out\\") + "_out"
-        print("output directory is ", new_dir)
+        new_dir = os.path.join(dst_dir, dirs_name.replace(os.path.sep, "_out" + os.path.sep) + "_out")
+        new_dir = os.path.normpath(new_dir)
+        #print("output directory is ", new_dir)
         os.makedirs(new_dir, exist_ok=True)
+
+def find_image_files(folder_path):
+    image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp']
+    image_files = []
+
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            if any(file.lower().endswith(ext) for ext in image_extensions):
+                image_files.append(os.path.join(root, file))
+
+    image_files = natsorted(image_files)
+
+    return image_files
 
 
 def browse_session_root():
@@ -24,29 +38,35 @@ def start_process():
     checkpoint = checkpoint_entry.get()
     diff_reasoning = diff_reason_swich.get()
     skip = skip_swich.get()
+    open_folder = True
+
+    image_files = find_image_files(session_root)
      
     if checkpoint.startswith("r"):
-        image_files = find_image_files(session_root)
         checkpoint = len(image_files) // int(checkpoint[1:])
     elif not checkpoint:
         checkpoint = None
     else:
         checkpoint = int(checkpoint)
 
-    print(f"Session Root:{session_root} Threshold:{threshold} Checkpoint:{checkpoint} Differential reasoning:{diff_reasoning} Exist skip:{skip}")
+    print(f"Session Root:{session_root}, Threshold:{threshold}, Checkpoint:{checkpoint}, Differential reasoning:{diff_reasoning}, Exist skip:{skip}")
 
     
     parent_dir = os.path.dirname(session_root)
     create_new_structure(session_root, parent_dir)
-    image_files = find_image_files(session_root)
+    
+    output_dir = session_root + "_out"
 
-    run_detector_with_image_queue(image_files, threshold, session_root, checkpoint, diff_reasoning, skip)
-    messagebox.showinfo("Info", "Process completed successfully.")
+    exec_mdet = ExecMdet(image_files, threshold, session_root, checkpoint, diff_reasoning, skip)
+    exec_mdet.run_detector_with_image_queue()
+    messagebox.showinfo("Info", f"Process completed successfully. Check the output folder {output_dir} for results.")
     root.destroy()
+    if open_folder:
+        os.startfile(output_dir)
 
 
 root = tk.Tk()
-root.title("CLI to GUI")
+root.title("ImageExtractWin GUI")
 
 tk.Label(root, text="Session Root:").grid(row=0, column=0, padx=10, pady=5)
 session_root_entry = tk.Entry(root, width=50)
@@ -81,5 +101,6 @@ skip_checkbutton.grid(row=4, column=1, padx=10, pady=5)
 start_button = tk.Button(root, text="Start", command=start_process)
 start_button.grid(row=5, column=0, columnspan=3, pady=20)
 
-root.mainloop()
+if __name__ == "__main__":
+    root.mainloop()
 
