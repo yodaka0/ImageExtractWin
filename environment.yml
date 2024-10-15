@@ -9,3 +9,4 @@ dependencies:
   - pip
   - pip:
       - PytorchWildlife==1.0.2.14
+      - timm
