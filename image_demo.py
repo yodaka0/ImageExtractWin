@@ -91,11 +91,11 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
             try:
                 animalclass = Classifier(model_dir=os.getcwd())
                 sp, conf = animalclass.run_prediction(result, img)
-                result['scientific_name'] = sp
+                result['name'] = sp
                 result['sp_confidence'] = conf
             except Exception as e:
                 print(f"Error in classification: {e}")
-                result['scientific_name'] = "False"
+                result['name'] = "False"
                 result['sp_confidence'] = "False"
     
     return result
