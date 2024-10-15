@@ -19,6 +19,8 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
 
     if not isinstance(threshold, float):
         threshold = 0.2
+
+    classify = False
     
     #%% 
     # Setting the device to use for computations ('cuda' indicates GPU)
@@ -85,5 +87,15 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
             print(f"Saving detection images to {new_file_path}")
             print(result)
         pw_utils.save_detection_images(result, new_file_path)
+        if classify:
+            try:
+                animalclass = Classifier(model_dir=os.getcwd())
+                sp, conf = animalclass.run_prediction(result, img)
+                result['scientific_name'] = sp
+                result['sp_confidence'] = conf
+            except Exception as e:
+                print(f"Error in classification: {e}")
+                result['scientific_name'] = "False"
+                result['sp_confidence'] = "False"
     
     return result
