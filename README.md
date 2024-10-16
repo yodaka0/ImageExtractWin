@@ -53,6 +53,14 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
 
 ### Instllation：インストール
 
+0. Auto Installation
+    download mdet_setup.py
+   
+    ```commandprompt
+    python mdet_setup.py
+    ```
+    If auto installation fail, run berow step.
+
 1. Clone the Repository：リポジトリの複製
 
     Run ```git clone```,  
@@ -94,52 +102,20 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
 
 ---
 
-## Usage：使い方1(use commandprompt)
+## Usage：使い方
 
 <br />
 
-0. ディレクトリの移動
+DesktopにあるDetect_guiのショートカットをクリックする
 
-    ```commandprompt
-    cd {ImageExtractWinのパス}
-    例
-    cd project\ImageExtractWin-master
-    ```
-    
-1. conda環境のアクティベート
+browsで画像があるフォルダを選択
 
-    ```commandprompt
-    conda activate pwlife
-    ```
+threshold:検出の閾値 ;
+skip:既にファイルがある場合スキップする ;
+checkpoint:処理の途中で途中経過を保存する;
+differential reasoning:前の画像と同じ位置のanimalの検出をblankに変換する
 
 
-2. gpuが使えるか確認
-
-    ```commandprompt(conda)
-    python gpu_check.py
-    ```
-
-
-3. Run MegaDetector  
-  MegaDetectorの実行
-
-    ```commandprompt(conda)
-    python exec_mdet.py session_root={カメラデータが入ったフォルダ} threshold={検出の閾値} checkpoint={途中で保存するファイル数}
-    ```  
-
-    thresholdは省略可(デフォルトは0.2)
-   
-    checkpointに入れた数のファイルを処理し終えるごとに途中経過が保存される(省略可)。r + x(数字)で全体のx分の一経過で保存(例：ファイル数200 r10　で20ファイルごとに保存)
-    
-    {カメラデータが入ったフォルダ}_outにjsonファイルとcsvファイルが保存される
-
-## Usage：使い方2(use batch file)
-1.プロジェクトディレクトリへ移動
-    ImageExtractWinのフォルダを開いてdetect.batをコピー
-
-2.カメラ画像のフォルダへ移動
-    解析したい画像のフォルダを開いてdetect.batをペースト
-    detect.batをダブルクリック
  
 
 
