@@ -4,15 +4,33 @@ import pandas as pd
 import datetime
 import json
 from tkinter import ttk
+import sys
+import os
+import signal
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+def signal_handler(sig, frame):
+    print('You pressed Ctrl+C! Cleaning up...')
+    sys.exit(0)
 
 
 class CsvEditor:
-    def __init__(self, root, spieces,user_name,file_name):
+    def __init__(self, root, spieces):
         self.root = root
-        self.user_name = user_name
-        self.file_name = file_name
         self.frame = tk.Frame(self.root)
         self.frame.pack()
+
+        self.file_name = file_name
+        self.user_name = user_name
 
         self.load_button = tk.Button(self.frame, text="Load CSV", command=self.load_csv)
         self.load_button.pack()
@@ -46,38 +64,59 @@ class CsvEditor:
         #self.list_of_dicts = []
 
     def load(self, filepath):
-        if filepath:
-            self.data = pd.read_csv(filepath)
-            #add a column for self.data
-            if "deploymentID" not in self.data.columns:
-                self.data["deploymentID"] = input("Please input the deploymentID: ")
-            if "scientificName" not in self.data.columns:
-                self.data["scientificName"] = False
-            if "lifestage" not in self.data.columns:
-                self.data["lifestage"] = "unknown"
-            if "sex" not in self.data.columns:
-                self.data["sex"] = "unknown"
-            if "classificationMethod" not in self.data.columns:
-                self.data["classificationMethod"] = "machine"
-            if "classifiedBy" not in self.data.columns:
-                self.data["classifiedBy"] = False
-            if "classificationTimestamp" not in self.data.columns:
-                self.data["classificationTimestamp"] = False
-            self.current_row = 0
-            # get time within minite
-            nowmin = str(datetime.datetime.now().strftime("%Y%m%d%H%M")) 
-            # change the file name to new one
-            file_dir = filepath.split("/")[:-1]
-            self.anotated_file = "/".join(file_dir) + "/" + self.file_name + "_" + nowmin + ".json"
-            self.column = self.data.columns[0]
-            self.column_name_num = {col: num for num, col in enumerate(self.data.columns)}
-            #print(self.column_name_num)
-            self.update_form()
+        try:
+            if filepath:
+                if filepath.endswith(".csv"):
+                    self.data = pd.read_csv(filepath, low_memory=False, encoding='utf-8')
+                elif filepath.endswith(".json"):
+                        with open(filepath, 'r', encoding='utf-8') as file:
+                            json_data = json.load(file)
+                            if "annotations" in json_data:
+                                self.data = pd.json_normalize(json_data["annotations"])
+                            else:
+                                raise ValueError("Key 'annotations' not found in JSON file")
+                #add a column for self.data
+                if "deploymentID" not in self.data.columns:
+                    self.data["deploymentID"] = input("Please input the deploymentID: ")
+                if "scientificName" not in self.data.columns:
+                    self.data["scientificName"] = False
+                if "lifestage" not in self.data.columns:
+                    self.data["lifestage"] = "unknown"
+                if "sex" not in self.data.columns:
+                    self.data["sex"] = "unknown"
+                if "classificationMethod" not in self.data.columns:
+                    self.data["classificationMethod"] = "machine"
+                if "classifiedBy" not in self.data.columns:
+                    self.data["classifiedBy"] = False
+                if "classificationTimestamp" not in self.data.columns:
+                    self.data["classificationTimestamp"] = False
+                self.current_row = 0
+                # get time within minite
+                nowmin = str(datetime.datetime.now().strftime("%Y%m%d%H%M")) 
+                # change the file name to new one
+                file_dir = filepath.split("/")[:-1]
+                self.anotated_file = "/".join(file_dir) + "/" + self.file_name + "_" + nowmin + ".json"
+                self.column = self.data.columns[0]
+                self.column_name_num = {col: num for num, col in enumerate(self.data.columns)}
+                #print(self.column_name_num)
+                self.update_form()
+
+        except Exception as e:
+            print(e)
+            raise
 
 
     def load_csv(self):
         filepath = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
         self.load(filepath)
+        try:
+            if os.path.exists("data/position.json"):
+                saved_position = json.load(open("data/position.json", "r"))
+                if saved_position["file"] == filepath:
+                    self.go_to_row(saved_position["position"])
+        except:
+            print("No saved position found.")
+            pass
 
     
     def load_json(self):
@@ -114,7 +153,18 @@ class CsvEditor:
                 column = frame.winfo_children()[0].cget("text")
                 input_dict[column] = input_data  # Save the input data to the dictionary
                 self.data.at[self.current_row, column] = input_data
+
+                # データ型を適切にキャスト
+                if pd.api.types.is_numeric_dtype(self.data[column]):
+                    input_data = pd.to_numeric(input_data, errors='coerce')
+                elif pd.api.types.is_datetime64_any_dtype(self.data[column]):
+                    input_data = pd.to_datetime(input_data, errors='coerce')
+            
+                input_dict[column] = input_data  # Save the input data to the dictionary
+                self.data.at[self.current_row, column] = input_data
+                
             print(f"scientificName was set to {self.data.at[self.current_row, 'scientificName']} at {now}")
+
             # Save classificationTimestamp and classifiedBy to self.data as well
             self.data.at[self.current_row, "classificationTimestamp"] = str(now)
             self.data.at[self.current_row, "classifiedBy"] = self.user_name
@@ -191,16 +241,21 @@ class CsvEditor:
         # form a dataframe from the list of dicts
         self_anotate_csv = self.anotated_file.replace(".json", ".csv")
         self.data.to_csv(self_anotate_csv, index=False)
+        #overwrite current_row name and self_anotate_csv
+        with open("data/position.json", "w") as f:
+            json.dump({"position": self.data.at[self.current_row, "img_id"], "file": self_anotate_csv}, f)
 
     def on_close(self):
         self.save_on_interrupt()
         self.root.destroy()
 
-    def go_to_row(self):
-        # ユーザーが入力した値を取得します。
-        input_value = self.input_field.get()
+    def go_to_row(self, input_value=None):
+
+        if input_value is None:
+            # ユーザーが入力した値を取得します。
+            input_value = self.input_field.get()
         # 入力値に対応する行を検索します。
-        matching_rows = self.data[self.data["file"] == input_value]
+        matching_rows = self.data[self.data["img_id"] == input_value]
         #print(matching_rows)
         if not matching_rows.empty:
             # 最初の一致する行を現在の行として設定します。
@@ -209,14 +264,51 @@ class CsvEditor:
             self.update_form()
 
 
+def preinput():
+    global file_name_entry
+    global user_name_entry
+    global file_name
+    global user_name
+    file_name = file_name_entry.get()
+    user_name = user_name_entry.get()
+    root.destroy()
+
+
+
 if __name__ == "__main__":
-    user_name = input("Please input your name: ")
-    file_name = input("Please input the file name: ")
-    spieces = pd.read_csv("spieces_name.csv")
+    csv_file_path = resource_path("data/spieces_name.csv")
+    spieces = pd.read_csv(csv_file_path)
+    
     root = tk.Tk()
-    editor = CsvEditor(root, spieces,user_name,file_name)
+    
+    # ファイル名とユーザー名を入力するためのフレームの作成
+    input_frame = tk.Frame(root)
+    input_frame.pack(pady=10)
+
+    # ファイル名のラベルと入力フィールド
+    file_name_label = tk.Label(input_frame, text="file name:")
+    file_name_label.pack(side=tk.LEFT)
+    file_name_entry = tk.Entry(input_frame)
+    file_name_entry.pack(side=tk.LEFT)
+
+    # ユーザー名のラベルと入力フィールド
+    user_name_label = tk.Label(input_frame, text="user name:")
+    user_name_label.pack(side=tk.LEFT)
+    user_name_entry = tk.Entry(input_frame)
+    user_name_entry.pack(side=tk.LEFT)
+
+    # 次へボタン
+    next_button = tk.Button(input_frame, text="Next", command=preinput)
+    next_button.pack()
+
+    root.mainloop()
+
+    root = tk.Tk()
+    editor = CsvEditor(root, spieces)
     root.protocol("WM_DELETE_WINDOW", editor.on_close)
+
     try:
+        signal.signal(signal.SIGINT, signal_handler)
         root.mainloop()
     except:
         editor.save_on_interrupt()
