@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import subprocess
 
 current_dir = os.getcwd()
@@ -38,10 +39,46 @@ with open('anotation_form.bat', 'w') as file:
     file.write(ano_bat_contents) 
 
 
+
+
+def get_desktop_path():
+    # Step 1: OneDriveフォルダの確認
+    onedrive_path = os.environ.get("OneDrive") or os.environ.get("OneDriveConsumer")
+    
+    if onedrive_path:
+        # OneDrive内のDesktopフォルダのパスを生成
+        desktop_path = Path(onedrive_path) / "Desktop"
+        if desktop_path.exists():
+            return desktop_path
+
+        # 日本語名の場合
+        desktop_path_jp = Path(onedrive_path) / "デスクトップ"
+        if desktop_path_jp.exists():
+            return desktop_path_jp
+
+    # Step 2: ローカルのデスクトップフォルダの確認
+    home_dir = Path.home()
+
+    # ローカルのDesktopフォルダを確認
+    local_desktop_path = home_dir / "Desktop"
+    if local_desktop_path.exists():
+        return local_desktop_path
+
+    # 日本語名の場合
+    local_desktop_path_jp = home_dir / "デスクトップ"
+    if local_desktop_path_jp.exists():
+        return local_desktop_path_jp
+
+    # どちらも見つからない場合
+    raise FileNotFoundError("Desktop folder not found in both OneDrive and local directories.")
+
+
 def create_shortcuts_in_directory(directory,bat_name):
-    desktop = os.path.join(os.environ['USERPROFILE'], 'Desktop')
-    shortcut_path = os.path.join(desktop, bat_name, ".lnk")
-    target_path = os.path.join(directory, bat_name, ".bat")
+    desktop_path = get_desktop_path()
+    print(desktop_path)
+    shortcut_path = os.path.join(desktop_path, f"{bat_name}.lnk")
+    target_path = os.path.join(directory, f"{bat_name}.bat")
+    print(f"Creating shortcut for {bat_name} at {shortcut_path}")
 
     vbs_script = f"""
 Set WshShell = WScript.CreateObject("WScript.Shell")
