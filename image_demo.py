@@ -14,6 +14,7 @@ from PytorchWildlife.models import detection as pw_detection
 from PytorchWildlife.data import transforms as pw_trans
 from PytorchWildlife import utils as pw_utils
 
+from classifier import Classifier
 
 def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasoning=False, verbose=False):
 
