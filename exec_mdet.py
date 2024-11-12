@@ -10,7 +10,7 @@ from PytorchWildlife import utils as pw_utils
 from supervision.detection.core import Detections
 
 class ExecMdet:
-    def __init__(self, image_files, threshold, session_root, checkpoint, diff_reasoning, skip):
+    def __init__(self, image_files, threshold, session_root, checkpoint, diff_reasoning, skip, md_model):
         self.image_files = image_files
         self.threshold = threshold
         self.session_root = session_root
@@ -18,6 +18,7 @@ class ExecMdet:
         self.diff_reasoning = diff_reasoning
         self.skip = skip
         self.verbose = False
+        self.model = md_model
 
 
     def save_detection_results(self, results, size, done=False):
@@ -95,7 +96,7 @@ class ExecMdet:
                     pre_detects = prev_result['detections']
                 else:
                     pre_detects = None
-                result = pw_detect(im_file, new_file, self.threshold, pre_detects, self.diff_reasoning, self.verbose)
+                result = pw_detect(im_file, new_file, self.threshold, pre_detects, self.diff_reasoning, self.verbose, self.model)
             result['deploymentID'] = os.path.basename(self.session_root)
             result['file'] = ex_file
 
