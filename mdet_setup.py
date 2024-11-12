@@ -122,7 +122,7 @@ def main():
             raise
 
 
-    project_dir = "~/ImageExtractWin-gui"
+    project_dir = "~/ImageExtractWin-v1.1"
 
     create_program_dir(project_dir, github_url)
 
