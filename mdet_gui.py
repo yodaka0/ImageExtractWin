@@ -38,6 +38,7 @@ def start_process():
     checkpoint = checkpoint_entry.get()
     diff_reasoning = diff_reason_swich.get()
     skip = skip_swich.get()
+    md_model = model_var.get()
     open_folder = True
 
     image_files = find_image_files(session_root)
@@ -57,7 +58,7 @@ def start_process():
     
     output_dir = session_root + "_out"
 
-    exec_mdet = ExecMdet(image_files, threshold, session_root, checkpoint, diff_reasoning, skip)
+    exec_mdet = ExecMdet(image_files, threshold, session_root, checkpoint, diff_reasoning, skip, md_model)
     exec_mdet.run_detector_with_image_queue()
     messagebox.showinfo("Info", f"Process completed successfully. Check the output folder {output_dir} for results.")
     root.destroy()
@@ -97,9 +98,15 @@ skip_swich.set(False)
 skip_checkbutton = tk.Checkbutton(root, variable=skip_swich)
 skip_checkbutton.grid(row=4, column=1, padx=10, pady=5)
 
+tk.Label(root, text="Select MegaDetector's model:").grid(row=5, column=0, padx=10, pady=5)
+model_var = tk.StringVar(root)
+model_var.set("MegaDetector_v6c")
+model_option = tk.OptionMenu(root, model_var, "MegaDetector_v6c", "MegaDetector_v5","HerdNet")
+model_option.grid(row=5, column=1, padx=10, pady=5)
+
 
 start_button = tk.Button(root, text="Start", command=start_process)
-start_button.grid(row=5, column=0, columnspan=3, pady=20)
+start_button.grid(row=6, column=0, columnspan=3, pady=20)
 
 if __name__ == "__main__":
     root.mainloop()
