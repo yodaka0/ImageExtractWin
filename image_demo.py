@@ -11,11 +11,13 @@ import torch
 #%% 
 # Importing the model, dataset, transformations and utility functions from PytorchWildlife
 from PytorchWildlife.models import detection as pw_detection
-from PytorchWildlife.data import transforms as pw_trans
+#from PytorchWildlife.data import transforms as pw_trans
 from PytorchWildlife import utils as pw_utils
 
+from classifier import Classifier
 
-def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasoning=False, verbose=False):
+
+def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasoning=False, verbose=False, model=None):
 
     if not isinstance(threshold, float):
         threshold = 0.2
@@ -30,7 +32,18 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
         print(f"Threshold: {threshold}")
     #%% 
     # Initializing the MegaDetectorV5 model for image detection
-    detection_model = pw_detection.MegaDetectorV5(device=DEVICE, pretrained=True)
+    if model == "MegaDetector_v5":
+        detection_model = pw_detection.MegaDetectorV5(device=DEVICE, pretrained=True, version="a")
+    elif model == "MegaDetector_v6c":
+        detection_model = pw_detection.MegaDetectorV6(device=DEVICE, pretrained=True, version="yolov9c")
+    elif model == "HerdNet":
+        if DEVICE == "cpu":
+            print("HerdNet model is too heavy for CPU, please use GPU")
+            raise ValueError("Model not supported")
+        elif DEVICE == "cuda":
+            detection_model = pw_detection.HerdNet(device=DEVICE)
+    else:
+        raise ValueError("Model not supported")
 
     #%% Single image detection
     # Specifying the path to the target image TODO: Allow argparsing
@@ -39,13 +52,19 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
     img = np.array(Image.open(im_file).convert("RGB"))
 
     # Initializing the Yolo-specific transform for the image
-    transform = pw_trans.MegaDetector_v5_Transform(target_size=detection_model.IMAGE_SIZE,
-                                                stride=detection_model.STRIDE)
+    #transform = pw_trans.MegaDetector_v5_Transform(target_size=detection_model.IMAGE_SIZE,
+    #                                            stride=detection_model.STRIDE)
 
     new_file_path = os.path.dirname(new_file)
 
     # Performing the detection on the single image
-    result = detection_model.single_image_detection(transform(img), img.shape, im_file, conf_thres=threshold)
+    #result = detection_model.single_image_detection(transform(img), img.shape, im_file, conf_thres=threshold)
+    # Performing the detection on the single image
+    if model == "HerdNet":
+        result = detection_model.single_image_detection(img=im_file)
+    else:
+        result = detection_model.single_image_detection(img=img, img_path=im_file, conf_thres=threshold)
+
     
     #result['img_id'] = result['img_id'].replace("\\","/")
 
@@ -86,16 +105,18 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
         if verbose:
             print(f"Saving detection images to {new_file_path}")
             print(result)
-        pw_utils.save_detection_images(result, new_file_path)
-        if classify:
-            try:
-                animalclass = Classifier(model_dir=os.getcwd())
-                sp, conf = animalclass.run_prediction(result, img)
-                result['name'] = sp
-                result['sp_confidence'] = conf
-            except Exception as e:
-                print(f"Error in classification: {e}")
-                result['name'] = "False"
-                result['sp_confidence'] = "False"
-    
+        if model == "HerdNet":
+            pw_utils.save_detection_images_dots(result, new_file_path, overwrite=False)
+        else:
+            pw_utils.save_detection_images(result, new_file_path, overwrite=False)
+            if classify:
+                try:
+                    animalclass = Classifier(model_dir=os.getcwd())
+                    sp, conf = animalclass.run_prediction(result, img)
+                    result['scientific_name'] = sp
+                    result['sp_confidence'] = conf
+                except Exception as e:
+                    print(f"Error in classification: {e}")
+                    raise
+
     return result
