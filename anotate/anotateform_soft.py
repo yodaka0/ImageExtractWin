@@ -75,6 +75,8 @@ class CsvEditor:
                                 self.data = pd.json_normalize(json_data["annotations"])
                             else:
                                 raise ValueError("Key 'annotations' not found in JSON file")
+                #load the length of the data
+                self.data_length = len(self.data)
                 #add a column for self.data
                 if "deploymentID" not in self.data.columns:
                     self.data["deploymentID"] = input("Please input the deploymentID: ")
@@ -151,8 +153,6 @@ class CsvEditor:
             for frame, widget in self.entries:
                 input_data = widget.get()
                 column = frame.winfo_children()[0].cget("text")
-                input_dict[column] = input_data  # Save the input data to the dictionary
-                self.data.at[self.current_row, column] = input_data
 
                 # データ型を適切にキャスト
                 if pd.api.types.is_numeric_dtype(self.data[column]):
@@ -171,6 +171,8 @@ class CsvEditor:
             self.data.at[self.current_row, "classificationMethod"] = "human"
             print(f"Next button was clicked at {now}")
             print(self.data.iloc[self.current_row])
+            #display the percentage of the data
+            print(f"{self.current_row}/{self.data_length} ({(self.current_row/self.data_length)*100}%) data was anotated.")
             if self.current_row < len(self.data) - 1:
                 time_current = datetime.datetime.strptime(self.data.at[self.current_row, 'eventEnd'], "%Y:%m:%d %H:%M:%S")
                 time_next = datetime.datetime.strptime(self.data.at[self.current_row+1, 'eventStart'], "%Y:%m:%d %H:%M:%S")
@@ -209,17 +211,20 @@ class CsvEditor:
             label.pack(side=tk.LEFT)
             if column == "scientificName":
                 combobox = ttk.Combobox(frame, values=self.options)
-                combobox.set(row_data[column])
+                combobox.set(str(row_data[column]))
                 combobox.pack(side=tk.LEFT)
                 self.entries.append((frame, combobox))
+                if row_data[column] == "False":
+                    #change the color of default value
+                    combobox.config(foreground="red")
             elif column == "lifestage":
                 combobox = ttk.Combobox(frame, values=["adult", "subadult", "juvenile", "unknown"])
-                combobox.set(row_data[column])
+                combobox.set(str(row_data[column]))
                 combobox.pack(side=tk.LEFT)
                 self.entries.append((frame, combobox))
             elif column == "sex":
                 combobox = ttk.Combobox(frame, values=["female", "male", "unknown"])
-                combobox.set(row_data[column])
+                combobox.set(str(row_data[column]))
                 combobox.pack(side=tk.LEFT)
                 self.entries.append((frame, combobox))
             else:
