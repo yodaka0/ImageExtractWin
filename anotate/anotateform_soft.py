@@ -6,7 +6,6 @@ import json
 from tkinter import ttk
 import sys
 import os
-import signal
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -18,25 +17,17 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
-def signal_handler(sig, frame):
-    print('You pressed Ctrl+C! Cleaning up...')
-    sys.exit(0)
-
-
 class CsvEditor:
     def __init__(self, root, spieces):
         self.root = root
         self.frame = tk.Frame(self.root)
         self.frame.pack()
 
-        self.file_name = file_name
-        self.user_name = user_name
-
         self.load_button = tk.Button(self.frame, text="Load CSV", command=self.load_csv)
         self.load_button.pack()
 
-        self.load_json_button = tk.Button(self.frame, text="Load JSON", command=self.load_json)
-        self.load_json_button.pack()
+        self.save_button = tk.Button(self.frame, text="Save to CSV", command=self.save_on_interrupt)
+        self.save_button.pack()
 
         self.skip_button = tk.Button(self.frame, text="Skip", command=self.skip_row, state=tk.DISABLED)
         self.skip_button.pack()
@@ -68,13 +59,8 @@ class CsvEditor:
             if filepath:
                 if filepath.endswith(".csv"):
                     self.data = pd.read_csv(filepath, low_memory=False, encoding='utf-8')
-                elif filepath.endswith(".json"):
-                        with open(filepath, 'r', encoding='utf-8') as file:
-                            json_data = json.load(file)
-                            if "annotations" in json_data:
-                                self.data = pd.json_normalize(json_data["annotations"])
-                            else:
-                                raise ValueError("Key 'annotations' not found in JSON file")
+                else:
+                    print("Invalid file format")
                 #load the length of the data
                 self.data_length = len(self.data)
                 #add a column for self.data
@@ -97,7 +83,7 @@ class CsvEditor:
                 nowmin = str(datetime.datetime.now().strftime("%Y%m%d%H%M")) 
                 # change the file name to new one
                 file_dir = filepath.split("/")[:-1]
-                self.anotated_file = "/".join(file_dir) + "/" + self.file_name + "_" + nowmin + ".json"
+                self.anotated_file = "/".join(file_dir) + "/" + file_name + "_" + nowmin + ".csv"
                 self.column = self.data.columns[0]
                 self.column_name_num = {col: num for num, col in enumerate(self.data.columns)}
                 #print(self.column_name_num)
@@ -116,14 +102,11 @@ class CsvEditor:
                 saved_position = json.load(open("data/position.json", "r"))
                 if saved_position["file"] == filepath:
                     self.go_to_row(saved_position["position"])
+                    print(f"Move to {saved_position["position"]}.")
         except:
+            
             print("No saved position found.")
             pass
-
-    
-    def load_json(self):
-        filepath = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
-        self.load(filepath)
 
     def skip_row(self):
         if self.data is not None:
@@ -139,10 +122,6 @@ class CsvEditor:
                 self.current_row += 1
                 self.update_form()
             else:
-         # save the json file
-                #with open(self.anotated_file, 'w') as f:
-                 #   json.dump(self.list_of_dicts, f)
-                #close the window
                 self.root.destroy()
 
     def next_row(self):
@@ -167,7 +146,7 @@ class CsvEditor:
 
             # Save classificationTimestamp and classifiedBy to self.data as well
             self.data.at[self.current_row, "classificationTimestamp"] = str(now)
-            self.data.at[self.current_row, "classifiedBy"] = self.user_name
+            self.data.at[self.current_row, "classifiedBy"] = user_name
             self.data.at[self.current_row, "classificationMethod"] = "human"
             print(f"Next button was clicked at {now}")
             print(self.data.iloc[self.current_row])
@@ -182,11 +161,6 @@ class CsvEditor:
                 self.current_row += 1
                 self.update_form()
             else:
-         # save the json file
-                #with open(self.anotated_file, 'w') as f:
-                 #   json.dump(self.list_of_dicts, f)
-
-                # close the window
                 self.root.destroy()
 
     def prev_row(self):
@@ -238,17 +212,14 @@ class CsvEditor:
         self.prev_button.config(state=tk.NORMAL if self.current_row > 0 else tk.DISABLED)
     
     def save_on_interrupt(self):
-         # save the json file
-        #with open(self.anotated_file, 'w') as f:
-         #   json.dump(self.list_of_dicts, f)
-        print(f"Data saved to {self.anotated_file} due to interrupt.")
+        
         #print(self.list_of_dicts)
         # form a dataframe from the list of dicts
-        self_anotate_csv = self.anotated_file.replace(".json", ".csv")
-        self.data.to_csv(self_anotate_csv, index=False)
+        print(f"Data saved to {self.anotated_file}.")
+        self.data.to_csv(self.anotated_file, index=False)
         #overwrite current_row name and self_anotate_csv
         with open("data/position.json", "w") as f:
-            json.dump({"position": self.data.at[self.current_row, "img_id"], "file": self_anotate_csv}, f)
+            json.dump({"position": self.data.at[self.current_row, "img_id"], "file": self.anotated_file}, f)
 
     def on_close(self):
         self.save_on_interrupt()
@@ -313,7 +284,6 @@ if __name__ == "__main__":
     root.protocol("WM_DELETE_WINDOW", editor.on_close)
 
     try:
-        signal.signal(signal.SIGINT, signal_handler)
         root.mainloop()
     except:
         editor.save_on_interrupt()
