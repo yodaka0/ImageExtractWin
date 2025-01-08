@@ -40,8 +40,8 @@ with open('anotation_form.bat', 'w') as file:
 
 def create_shortcuts_in_directory(directory,bat_name):
     desktop = os.path.join(os.environ['USERPROFILE'], 'Desktop')
-    shortcut_path = os.path.join(desktop, bat_name, ".lnk")
-    target_path = os.path.join(directory, bat_name, ".bat")
+    shortcut_path = os.path.join(desktop, bat_name + ".lnk")
+    target_path = os.path.join(directory, bat_name + ".bat")
 
     vbs_script = f"""
 Set WshShell = WScript.CreateObject("WScript.Shell")
