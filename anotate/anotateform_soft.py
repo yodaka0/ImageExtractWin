@@ -6,6 +6,8 @@ import json
 from tkinter import ttk
 import sys
 import os
+import re
+
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -50,7 +52,8 @@ class CsvEditor:
         self.data = None
         self.current_row = 0
         self.anotated_file = None
-        self.options = spieces["scientific_name"].tolist()
+        self.spieces = spieces
+        self.options = spieces["japanese_name"].tolist()
         # list of dicts
         #self.list_of_dicts = []
 
@@ -110,7 +113,7 @@ class CsvEditor:
 
     def skip_row(self):
         if self.data is not None:
-            if self.current_row < len(self.data) - 1:
+            if self.current_row < self.data_length - 1:
                 # save the input data to dict from the form
                 input_dict = {}  # Create an empty dictionary to store the input data
                 for frame, widget in self.entries:
@@ -141,25 +144,38 @@ class CsvEditor:
             
                 input_dict[column] = input_data  # Save the input data to the dictionary
                 self.data.at[self.current_row, column] = input_data
+            
+            animal_jname  = self.data.at[self.current_row, 'scientificName']
+            if bool(re.match(r'^[A-Za-z]+$', animal_jname)):
+                animal_sname = animal_jname
+            else:
+                try:
+                    animal_sname = self.spieces[self.spieces["japanese_name"] == animal_jname]["scientific_name"].values[0]
+                except:
+                    animal_sname = "unknown"
                 
-            print(f"scientificName was set to {self.data.at[self.current_row, 'scientificName']} at {now}")
+            print(f"scientificName was set to {animal_sname} at {now}")
 
             # Save classificationTimestamp and classifiedBy to self.data as well
+            self.data.at[self.current_row, "scientificName"] = animal_sname
             self.data.at[self.current_row, "classificationTimestamp"] = str(now)
             self.data.at[self.current_row, "classifiedBy"] = user_name
             self.data.at[self.current_row, "classificationMethod"] = "human"
             print(f"Next button was clicked at {now}")
             print(self.data.iloc[self.current_row])
             #display the percentage of the data
-            print(f"{self.current_row}/{self.data_length} ({(self.current_row/self.data_length)*100}%) data was anotated.")
-            if self.current_row < len(self.data) - 1:
+            print(f"{self.current_row + 1}/{self.data_length} ({(self.current_row/self.data_length)*100}%) data was anotated.")
+            if self.current_row < self.data_length -1:
                 time_current = datetime.datetime.strptime(self.data.at[self.current_row, 'eventEnd'], "%Y:%m:%d %H:%M:%S")
                 time_next = datetime.datetime.strptime(self.data.at[self.current_row+1, 'eventStart'], "%Y:%m:%d %H:%M:%S")
                 time_diff = (time_next - time_current).total_seconds()
                 if  abs(time_diff) < 120:
-                    self.data.at[self.current_row+1, 'scientificName'] = self.data.at[self.current_row, 'scientificName']
+                    self.data.at[self.current_row + 1, 'scientificName'] = animal_jname
                 self.current_row += 1
                 self.update_form()
+            elif self.current_row == self.data_length - 1:
+                self.save_on_interrupt()
+                self.root.destroy()
             else:
                 self.root.destroy()
 
@@ -207,7 +223,7 @@ class CsvEditor:
                 entry.pack(side=tk.LEFT)
                 self.entries.append((frame, entry))
 
-        self.next_button.config(state=tk.NORMAL if self.current_row < len(self.data) - 1 else tk.DISABLED)
+        self.next_button.config(state=tk.NORMAL if self.current_row < len(self.data) else tk.DISABLED)
         self.skip_button.config(state=tk.NORMAL if self.current_row < len(self.data) - 1 else tk.DISABLED)
         self.prev_button.config(state=tk.NORMAL if self.current_row > 0 else tk.DISABLED)
     
