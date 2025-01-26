@@ -101,7 +101,7 @@ skip_checkbutton.grid(row=4, column=1, padx=10, pady=5)
 tk.Label(root, text="Select MegaDetector's model:").grid(row=5, column=0, padx=10, pady=5)
 model_var = tk.StringVar(root)
 model_var.set("MegaDetector_v6c")
-model_option = tk.OptionMenu(root, model_var, "MegaDetector_v6c", "MegaDetector_v5","HerdNet")
+model_option = tk.OptionMenu(root, model_var, "MegaDetector_v5","HerdNet","MDV6-yolov9-c", "MDV6-yolov9-e", "MDV6-yolov10-c", "MDV6-yolov10-e", "MDV6-rtdetr-c")
 model_option.grid(row=5, column=1, padx=10, pady=5)
 
 
