@@ -34,8 +34,6 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
     # Initializing the MegaDetectorV5 model for image detection
     if model == "MegaDetector_v5":
         detection_model = pw_detection.MegaDetectorV5(device=DEVICE, pretrained=True, version="a")
-    elif model == "MegaDetector_v6c":
-        detection_model = pw_detection.MegaDetectorV6(device=DEVICE, pretrained=True, version="yolov9c")
     elif model == "HerdNet":
         if DEVICE == "cpu":
             print("HerdNet model is too heavy for CPU, please use GPU")
@@ -43,7 +41,7 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
         elif DEVICE == "cuda":
             detection_model = pw_detection.HerdNet(device=DEVICE, dataset="ennedi")
     else:
-        raise ValueError("Model not supported")
+        detection_model = pw_detection.MegaDetectorV6(device=DEVICE, pretrained=True, version=model)
 
     #%% Single image detection
     # Specifying the path to the target image TODO: Allow argparsing
