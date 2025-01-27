@@ -8,5 +8,5 @@ dependencies:
   - setuptools==69.5.1
   - pip
   - pip:
-      - PytorchWildlife==1.1.0.0
+      - PytorchWildlife==1.2.0.0
       - timm
