@@ -62,7 +62,11 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
         result = detection_model.single_image_detection(img=im_file)
         #print(result)
     else:
-        result = detection_model.single_image_detection(img=img, img_path=im_file, conf_thres=threshold)
+        try:
+            result = detection_model.single_image_detection(img=img, img_path=im_file, det_conf_thres=threshold)
+        except:
+            result = detection_model.single_image_detection(img=img, img_path=im_file)
+            print("threshold set defalut value")
 
     
         #result['img_id'] = result['img_id'].replace("\\","/")
