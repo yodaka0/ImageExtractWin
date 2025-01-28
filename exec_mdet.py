@@ -179,7 +179,7 @@ class ExecMdet:
             q.task_done()
         
         
-    def run_detector_with_image_queue(self):
+def run_detector_with_image_queue(self):
 
         try:
             q = multiprocessing.JoinableQueue(maxsize=10)
@@ -199,6 +199,9 @@ class ExecMdet:
 
             q.join()
             print('Queue joined')
+
+            consumer.join()
+            print('Consumer finished')
                 
             return
             
