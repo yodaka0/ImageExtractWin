@@ -9,6 +9,10 @@ from image_demo import pw_detect
 from PytorchWildlife import utils as pw_utils
 from supervision.detection.core import Detections
 
+def process_image_helper(args):
+    instance, im_file = args
+    return instance.process_image(im_file, None)
+
 class ExecMdet:
     def __init__(self, image_files, threshold, session_root, checkpoint, diff_reasoning, skip, md_model):
         self.image_files = image_files
@@ -19,6 +23,8 @@ class ExecMdet:
         self.skip = skip
         self.verbose = False
         self.model = md_model
+
+
 
     def save_detection_results(self, results, size, done=False):
         output_dir = self.session_root + "_out"
@@ -89,6 +95,7 @@ class ExecMdet:
                 )
                 result['deploymentID'] = os.path.basename(self.session_root)
                 result['file'] = ex_file
+                
                 return result
 
         except Exception as e:
@@ -108,22 +115,17 @@ class ExecMdet:
             return_list = manager.list()
             images = self.image_files
 
-            # Prepare a pool of consumers
+            start_time = time.time()
             with multiprocessing.Pool(cpu_count) as pool:
-                prev_result = None
-                results = []
-                start_time = time.time()
+                results = pool.map(process_image_helper, [(self, im_file) for im_file in images])
 
-                for i, im_file in enumerate(images, 1):
-                    result = self.process_image(im_file, prev_result)
-                    results.append(result)
-                    prev_result = result
-                    if (self.checkpoint and self.checkpoint > 0) and (i % self.checkpoint == 0):
-                        self.save_detection_results(results, size=i, done=False)
-                    print(f"Processed {i}/{len(images)} images. Mean time per image: {(time.time() - start_time) / i:.2f} sec")
+            for i in range(len(results)):
+                if (self.checkpoint and self.checkpoint > 0) and ((i + 1) % self.checkpoint == 0):
+                    self.save_detection_results(results[:i+1], size=i+1, done=False)
+                    
 
-                self.save_detection_results(results, size=len(results), done=True)
-                print(f"Finished processing in {time.time() - start_time:.2f} sec")
+            self.save_detection_results(results, size=len(results), done=True)
+            print(f"Finished processing in {time.time() - start_time:.2f} sec")
 
         except Exception as e:
             print(f'Exception: {e}')
