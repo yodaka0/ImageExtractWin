@@ -4,6 +4,7 @@ import pandas as pd
 import datetime
 import json
 from tkinter import ttk
+import tkinter.font as tkFont
 import sys
 import os
 import re
@@ -272,6 +273,11 @@ if __name__ == "__main__":
     spieces = pd.read_csv(csv_file_path)
     
     root = tk.Tk()
+    root.title("CSV Editor")
+    font_size = 13
+
+    default_font = tkFont.nametofont("TkDefaultFont")
+    default_font.configure(size=font_size)
     
     # ファイル名とユーザー名を入力するためのフレームの作成
     input_frame = tk.Frame(root)
@@ -296,6 +302,12 @@ if __name__ == "__main__":
     root.mainloop()
 
     root = tk.Tk()
+    root.title("CSV Editor")
+    default_font = tkFont.nametofont("TkDefaultFont")
+    default_font.configure(size=font_size)
+    entry = tk.Entry(root)
+    entry.option_add("*Font", default_font)
+    
     editor = CsvEditor(root, spieces)
     root.protocol("WM_DELETE_WINDOW", editor.on_close)
 
