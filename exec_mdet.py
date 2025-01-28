@@ -1,5 +1,5 @@
 import os
-import sys
+#import sys
 import time
 import pandas as pd
 import numpy as np
@@ -18,7 +18,7 @@ class ExecMdet:
         self.image_files = image_files
         self.threshold = threshold
         self.session_root = session_root
-        self.checkpoint = checkpoint
+        #self.checkpoint = checkpoint
         self.diff_reasoning = diff_reasoning
         self.skip = skip
         self.verbose = False
@@ -28,10 +28,10 @@ class ExecMdet:
 
     def save_detection_results(self, results, size, done=False):
         output_dir = self.session_root + "_out"
-        os.makedirs(output_dir, exist_ok=True)
+        #os.makedirs(output_dir, exist_ok=True)
         base_name = os.path.basename(self.session_root)
-        output_json_path = os.path.join(output_dir, f"{base_name}_output{size}.json")
-        output_csv_path = os.path.join(output_dir, f"{base_name}_output{size}.csv")
+        output_json_path = os.path.join(output_dir, f"{base_name}_output{self.model}.json")
+        output_csv_path = os.path.join(output_dir, f"{base_name}_output_{self.model}.csv")
 
         pw_utils.save_detection_json(
             results,
@@ -45,12 +45,12 @@ class ExecMdet:
             exclude_category_ids=[],
             exclude_file_path=None
         )
-        print(f'JSON saved: {output_json_path}')
+        print(f'JSON saved: {output_json_path}, {size} images processed')
 
         df = pd.DataFrame(results)
         df_obj = df[df['object'] > 0]
         df_obj.to_csv(output_csv_path, index=True)
-        print(f'CSV saved: {output_csv_path}')
+        print(f'CSV saved: {output_csv_path}, {size} images processed')
 
         if done:
             df_corrupt = df[df['object'] < 0]
@@ -95,6 +95,9 @@ class ExecMdet:
                 )
                 result['deploymentID'] = os.path.basename(self.session_root)
                 result['file'] = ex_file
+
+                if self.verbose:
+                    print(result)
                 
                 return result
 
@@ -109,24 +112,19 @@ class ExecMdet:
 
     def run_detector_with_image_queue(self):
         try:
-            q_size = 10
+            #q_size = 10
             cpu_count = max(1, multiprocessing.cpu_count() - 1)
-            manager = multiprocessing.Manager()
-            return_list = manager.list()
+            #manager = multiprocessing.Manager()
+            #return_list = manager.list()
             images = self.image_files
 
             start_time = time.time()
             with multiprocessing.Pool(cpu_count) as pool:
-                results = pool.map(process_image_helper, [(self, im_file) for im_file in images])
-
-            for i in range(len(results)):
-                if (self.checkpoint and self.checkpoint > 0) and ((i + 1) % self.checkpoint == 0):
-                    self.save_detection_results(results[:i+1], size=i+1, done=False)
-                    
-
-            self.save_detection_results(results, size=len(results), done=True)
+                results = pool.map(process_image_helper, [(self, im_file) for im_file in images])      
+                        
             print(f"Finished processing in {time.time() - start_time:.2f} sec")
-
+            self.save_detection_results(results, size=len(results), done=True)
+            
         except Exception as e:
             print(f'Exception: {e}')
             raise
