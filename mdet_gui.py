@@ -1,17 +1,19 @@
 import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from tkinter import font
 from natsort import natsorted
 from exec_mdet import ExecMdet
+from tkinter import font
 
-
-def create_new_structure(src_dir, dst_dir):
+def create_new_structure(src_dir):
+    dst_dir = os.path.dirname(src_dir)
     for dir, _ ,_ in os.walk(src_dir):
         dirs_name = dir.replace(dst_dir, "")
-        new_dir = os.path.join(dst_dir, dirs_name.replace(os.path.sep, "_out" + os.path.sep) + "_out")
+        mid_dir = dirs_name.replace(os.path.sep, "_out" + os.path.sep)  + "_out"
+        mid_dir = mid_dir.lstrip("/")
+        mid_dir = mid_dir.lstrip("\\")
+        new_dir = os.path.join(dst_dir, mid_dir)
         new_dir = os.path.normpath(new_dir)
-        #print("output directory is ", new_dir)
         os.makedirs(new_dir, exist_ok=True)
 
 def find_image_files(folder_path):
@@ -56,8 +58,8 @@ def start_process():
     print(f"Session Root:{session_root}, Threshold:{threshold}, Checkpoint:{checkpoint}, Differential reasoning:{diff_reasoning}, Exist skip:{skip}")
 
     
-    parent_dir = os.path.dirname(session_root)
-    create_new_structure(session_root, parent_dir)
+    #parent_dir = os.path.dirname(session_root)
+    create_new_structure(session_root)
     
     output_dir = session_root + "_out"
 
@@ -107,7 +109,7 @@ skip_checkbutton.grid(row=4, column=1, padx=10, pady=5)
 
 tk.Label(root, text="Select MegaDetector's model:").grid(row=5, column=0, padx=10, pady=5)
 model_var = tk.StringVar(root)
-model_var.set("MegaDetector_v6c")
+model_var.set("MDV6-yolov10-c")
 model_option = tk.OptionMenu(root, model_var, 
                              "MegaDetector_v5", "HerdNet", "MDV6-yolov9-c", "MDV6-yolov9-e", "MDV6-yolov10-c", "MDV6-yolov10-e", "MDV6-rtdetr-c")
 model_option['menu'].config(font=('Helvetica', font_size))
