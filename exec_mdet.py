@@ -167,7 +167,7 @@ class ExecMdet:
             if self.verbose or ((n_images_processed % 10) == 0):
                 time_diff = time.time() - start_time
                 images_per_second = n_images_processed / time_diff if time_diff > 0 else float('inf')
-                print(f'De-queued image {n_images_processed} ({images_per_second}/s)')
+                print(f'De-queued image {n_images_processed} ({images_per_second}/s). Time elapsed: {time_diff} s')
                 sys.stdout.flush()
             if self.checkpoint is not None and self.checkpoint > 0 and ((n_images_processed % self.checkpoint) == 0):
                     self.save_detection_results(results, size=n_images_processed, done=False)
