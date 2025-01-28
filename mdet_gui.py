@@ -1,8 +1,10 @@
 import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
+from tkinter import font
 from natsort import natsorted
 from exec_mdet import ExecMdet
+
 
 def create_new_structure(src_dir, dst_dir):
     for dir, _ ,_ in os.walk(src_dir):
@@ -40,6 +42,7 @@ def start_process():
     skip = skip_swich.get()
     md_model = model_var.get()
     open_folder = True
+    
 
     image_files = find_image_files(session_root)
      
@@ -68,6 +71,10 @@ def start_process():
 
 root = tk.Tk()
 root.title("ImageExtractWin GUI")
+font_size = 15
+
+default_font = font.nametofont("TkDefaultFont")
+default_font.configure(size=font_size)
 
 tk.Label(root, text="Session Root:").grid(row=0, column=0, padx=10, pady=5)
 session_root_entry = tk.Entry(root, width=50)
@@ -101,7 +108,9 @@ skip_checkbutton.grid(row=4, column=1, padx=10, pady=5)
 tk.Label(root, text="Select MegaDetector's model:").grid(row=5, column=0, padx=10, pady=5)
 model_var = tk.StringVar(root)
 model_var.set("MegaDetector_v6c")
-model_option = tk.OptionMenu(root, model_var, "MegaDetector_v5","HerdNet","MDV6-yolov9-c", "MDV6-yolov9-e", "MDV6-yolov10-c", "MDV6-yolov10-e", "MDV6-rtdetr-c")
+model_option = tk.OptionMenu(root, model_var, 
+                             "MegaDetector_v5", "HerdNet", "MDV6-yolov9-c", "MDV6-yolov9-e", "MDV6-yolov10-c", "MDV6-yolov10-e", "MDV6-rtdetr-c")
+model_option['menu'].config(font=('Helvetica', font_size))
 model_option.grid(row=5, column=1, padx=10, pady=5)
 
 
