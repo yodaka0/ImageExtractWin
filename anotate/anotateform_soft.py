@@ -11,9 +11,7 @@ import re
 
 
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
@@ -85,9 +83,14 @@ class CsvEditor:
                 self.current_row = 0
                 # get time within minite
                 nowmin = str(datetime.datetime.now().strftime("%Y%m%d%H%M")) 
-                # change the file name to new one
-                file_dir = filepath.split("/")[:-1]
-                self.anotated_file = "/".join(file_dir) + "/" + file_name + "_" + nowmin + ".csv"
+                try:
+                    # change the file name to new one
+                    file_dir = os.path.dirname(filepath)
+                    self.anotated_file = os.path.join(file_dir, f"{file_name}_{nowmin}.csv")
+                except:
+                    print("Invalid file path")
+                    file_dir = filepath.split("/")[:-1]
+                    self.anotated_file = "/".join(file_dir) + "/" + file_name + "_" + nowmin + ".csv"
                 self.column = self.data.columns[0]
                 self.column_name_num = {col: num for num, col in enumerate(self.data.columns)}
                 #print(self.column_name_num)
@@ -108,7 +111,6 @@ class CsvEditor:
                     self.go_to_row(saved_position["position"])
                     print(f"Move to {saved_position["position"]}.")
         except:
-            
             print("No saved position found.")
             pass
 
@@ -116,38 +118,46 @@ class CsvEditor:
         if self.data is not None:
             if self.current_row < self.data_length - 1:
                 # save the input data to dict from the form
-                input_dict = {}  # Create an empty dictionary to store the input data
-                for frame, widget in self.entries:
+                #input_dict = {}  # Create an empty dictionary to store the input data
+                """for frame, widget in self.entries:
                     input_data = widget.get()
                     column = frame.winfo_children()[0].cget("text")
-                    input_dict[column] = input_data  # Save the input data to the dictionary
+                    #input_dict[column] = input_data  # Save the input data to the dictionary
                     #self.data.at[self.current_row, column] = input_data
-                #self.list_of_dicts.append(input_dict)
+                #self.list_of_dicts.append(input_dict)"""
+                print(f"Skip button was clicked at {datetime.datetime.now()}")
                 self.current_row += 1
                 self.update_form()
             else:
+                self.save_on_interrupt()
                 self.root.destroy()
 
     def next_row(self):
         if self.data is not None:
             now = datetime.datetime.now()
             # save the input data to dict from the form
-            input_dict = {}  # Create an empty dictionary to store the input data
+            #input_dict = {}  # Create an empty dictionary to store the input data
             for frame, widget in self.entries:
                 input_data = widget.get()
                 column = frame.winfo_children()[0].cget("text")
 
-                # データ型を適切にキャスト
+                """# データ型を適切にキャスト
                 if pd.api.types.is_numeric_dtype(self.data[column]):
                     input_data = pd.to_numeric(input_data, errors='coerce')
                 elif pd.api.types.is_datetime64_any_dtype(self.data[column]):
                     input_data = pd.to_datetime(input_data, errors='coerce')
-            
-                input_dict[column] = input_data  # Save the input data to the dictionary
+                elif pd.api.types.is_bool_dtype(self.data[column]):
+                    input_data = bool(input_data) if isinstance(input_data, str) and input_data.lower() in ['true', 'false'] else pd.NA
+                elif pd.api.types.is_string_dtype(self.data[column]):
+                    input_data = str(input_data)"""
+
                 self.data.at[self.current_row, column] = input_data
+
+                if column == "scientificName":
+                    animal_jname = input_data
+                    #print(f"japaneseName was set to {animal_jname} at {now}")
             
-            animal_jname  = self.data.at[self.current_row, 'scientificName']
-            if bool(re.match(r'^[A-Za-z]+$', animal_jname)):
+            if bool(re.match(r'^[A-Za-z]+$', str(animal_jname))):
                 animal_sname = animal_jname
             else:
                 try:
@@ -205,9 +215,6 @@ class CsvEditor:
                 combobox.set(str(row_data[column]))
                 combobox.pack(side=tk.LEFT)
                 self.entries.append((frame, combobox))
-                if row_data[column] == "False":
-                    #change the color of default value
-                    combobox.config(foreground="red")
             elif column == "lifestage":
                 combobox = ttk.Combobox(frame, values=["adult", "subadult", "juvenile", "unknown"])
                 combobox.set(str(row_data[column]))
