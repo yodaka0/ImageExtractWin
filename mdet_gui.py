@@ -39,7 +39,7 @@ def browse_session_root():
 def start_process():
     session_root = session_root_entry.get()
     threshold = float(threshold_entry.get())
-    checkpoint = checkpoint_entry.get()
+    #checkpoint = checkpoint_entry.get()
     diff_reasoning = diff_reason_swich.get()
     skip = skip_swich.get()
     md_model = model_var.get()
@@ -47,15 +47,8 @@ def start_process():
     
 
     image_files = find_image_files(session_root)
-     
-    if checkpoint.startswith("r"):
-        checkpoint = len(image_files) // int(checkpoint[1:])
-    elif not checkpoint:
-        checkpoint = None
-    else:
-        checkpoint = int(checkpoint)
 
-    print(f"Session Root:{session_root}, Threshold:{threshold}, Checkpoint:{checkpoint}, Differential reasoning:{diff_reasoning}, Exist skip:{skip}")
+    print(f"Session Root:{session_root}, Threshold:{threshold}, Differential reasoning:{diff_reasoning}, Exist skip:{skip}")
 
     
     #parent_dir = os.path.dirname(session_root)
@@ -63,7 +56,7 @@ def start_process():
     
     output_dir = session_root + "_out"
 
-    exec_mdet = ExecMdet(image_files, threshold, session_root, checkpoint, diff_reasoning, skip, md_model)
+    exec_mdet = ExecMdet(image_files, threshold, session_root, diff_reasoning, skip, md_model)
     exec_mdet.run_detector_with_image_queue()
     messagebox.showinfo("Info", f"Process completed successfully. Check the output folder {output_dir} for results.")
     root.destroy()
@@ -89,9 +82,9 @@ threshold_entry = tk.Entry(root, width=50)
 threshold_entry.insert(0, "0.2") 
 threshold_entry.grid(row=1, column=1, padx=10, pady=5)
 
-tk.Label(root, text="Checkpoint:").grid(row=2, column=0, padx=10, pady=5)
+"""tk.Label(root, text="Checkpoint:").grid(row=2, column=0, padx=10, pady=5)
 checkpoint_entry = tk.Entry(root, width=50)
-checkpoint_entry.grid(row=2, column=1, padx=10, pady=5)
+checkpoint_entry.grid(row=2, column=1, padx=10, pady=5)"""
 
 tk.Label(root, text="Differential reasoning:").grid(row=3, column=0, padx=10, pady=5)
 diff_reason_swich = tk.BooleanVar(root)
@@ -107,13 +100,13 @@ skip_swich.set(False)
 skip_checkbutton = tk.Checkbutton(root, variable=skip_swich)
 skip_checkbutton.grid(row=4, column=1, padx=10, pady=5)
 
-tk.Label(root, text="Select MegaDetector's model:").grid(row=5, column=0, padx=10, pady=5)
+tk.Label(root, text="Select MegaDetector's model:").grid(row=2, column=0, padx=10, pady=5)
 model_var = tk.StringVar(root)
 model_var.set("MDV6-yolov10-c")
 model_option = tk.OptionMenu(root, model_var, 
-                             "MegaDetector_v5", "HerdNet", "MDV6-yolov9-c", "MDV6-yolov9-e", "MDV6-yolov10-c", "MDV6-yolov10-e", "MDV6-rtdetr-c")
+                             "MegaDetector_v5", "HerdNet", "MDV6-yolov9-c", "MDV6-yolov9-e", "MDV6-yolov10-c", "MDV6-yolov10-e", "MDV6-rtdetr-c","MDV6-yolov9-e-1280")
 model_option['menu'].config(font=('Helvetica', font_size))
-model_option.grid(row=5, column=1, padx=10, pady=5)
+model_option.grid(row=2, column=1, padx=10, pady=5)
 
 
 start_button = tk.Button(root, text="Start", command=start_process)
@@ -121,4 +114,3 @@ start_button.grid(row=6, column=0, columnspan=3, pady=20)
 
 if __name__ == "__main__":
     root.mainloop()
-
