@@ -4,6 +4,7 @@ import time
 import pandas as pd
 import numpy as np
 import multiprocessing
+import torch
 
 from image_demo import pw_detect
 from PytorchWildlife import utils as pw_utils
@@ -22,6 +23,7 @@ class ExecMdet:
         self.diff_reasoning = diff_reasoning
         self.skip = skip
         self.verbose = False
+        
         self.model = md_model
 
 
@@ -112,15 +114,20 @@ class ExecMdet:
 
     def run_detector_with_image_queue(self):
         try:
-            #q_size = 10
             cpu_count = max(1, multiprocessing.cpu_count() - 1)
             #manager = multiprocessing.Manager()
             #return_list = manager.list()
             images = self.image_files
 
             start_time = time.time()
-            with multiprocessing.Pool(cpu_count) as pool:
-                results = pool.map(process_image_helper, [(self, im_file) for im_file in images])      
+
+            if torch.cuda.is_available():
+                with multiprocessing.Pool(cpu_count) as pool:
+                    results = pool.map(process_image_helper, [(self, im_file) for im_file in images])
+            else:
+                results = []
+                for im_file in images:
+                    results.append(self.process_image(im_file, None))
                         
             print(f"Finished processing in {time.time() - start_time:.2f} sec")
             self.save_detection_results(results, size=len(results), done=True)
