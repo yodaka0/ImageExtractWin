@@ -73,7 +73,7 @@ def create_program_dir(project_dir, github_url):
     os.makedirs(project_dir_path, exist_ok=True)
 
     try:
-        run_command(f"git clone -b gui {repo_url} {project_dir_path}")
+        run_command(f"git clone -b PytorchWildlifeV1.2 {repo_url} {project_dir_path}")
     except subprocess.CalledProcessError:
         print("Git clone failed, attempting to download ZIP.")
         download_and_extract_zip(zip_url, project_dir_path)
@@ -122,7 +122,7 @@ def main():
             raise
 
 
-    project_dir = "~/ImageExtractWin-gui"
+    project_dir = "~/ImageExtractWin-v1.1"
 
     create_program_dir(project_dir, github_url)
 

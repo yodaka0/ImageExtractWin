@@ -4,24 +4,19 @@ import pandas as pd
 import datetime
 import json
 from tkinter import ttk
+import tkinter.font as tkFont
 import sys
 import os
-import signal
+import re
+
 
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
-
-def signal_handler(sig, frame):
-    print('You pressed Ctrl+C! Cleaning up...')
-    sys.exit(0)
-
 
 class CsvEditor:
     def __init__(self, root, spieces):
@@ -29,14 +24,11 @@ class CsvEditor:
         self.frame = tk.Frame(self.root)
         self.frame.pack()
 
-        self.file_name = file_name
-        self.user_name = user_name
-
         self.load_button = tk.Button(self.frame, text="Load CSV", command=self.load_csv)
         self.load_button.pack()
 
-        self.load_json_button = tk.Button(self.frame, text="Load JSON", command=self.load_json)
-        self.load_json_button.pack()
+        self.save_button = tk.Button(self.frame, text="Save to CSV", command=self.save_on_interrupt)
+        self.save_button.pack()
 
         self.skip_button = tk.Button(self.frame, text="Skip", command=self.skip_row, state=tk.DISABLED)
         self.skip_button.pack()
@@ -59,7 +51,8 @@ class CsvEditor:
         self.data = None
         self.current_row = 0
         self.anotated_file = None
-        self.options = spieces["scientific_name"].tolist()
+        self.spieces = spieces
+        self.options = spieces["japanese_name"].tolist()
         # list of dicts
         #self.list_of_dicts = []
 
@@ -68,13 +61,10 @@ class CsvEditor:
             if filepath:
                 if filepath.endswith(".csv"):
                     self.data = pd.read_csv(filepath, low_memory=False, encoding='utf-8')
-                elif filepath.endswith(".json"):
-                        with open(filepath, 'r', encoding='utf-8') as file:
-                            json_data = json.load(file)
-                            if "annotations" in json_data:
-                                self.data = pd.json_normalize(json_data["annotations"])
-                            else:
-                                raise ValueError("Key 'annotations' not found in JSON file")
+                else:
+                    print("Invalid file format")
+                #load the length of the data
+                self.data_length = len(self.data)
                 #add a column for self.data
                 if "deploymentID" not in self.data.columns:
                     self.data["deploymentID"] = input("Please input the deploymentID: ")
@@ -93,9 +83,14 @@ class CsvEditor:
                 self.current_row = 0
                 # get time within minite
                 nowmin = str(datetime.datetime.now().strftime("%Y%m%d%H%M")) 
-                # change the file name to new one
-                file_dir = filepath.split("/")[:-1]
-                self.anotated_file = "/".join(file_dir) + "/" + self.file_name + "_" + nowmin + ".json"
+                try:
+                    # change the file name to new one
+                    file_dir = os.path.dirname(filepath)
+                    self.anotated_file = os.path.join(file_dir, f"{file_name}_{nowmin}.csv")
+                except:
+                    print("Invalid file path")
+                    file_dir = filepath.split("/")[:-1]
+                    self.anotated_file = "/".join(file_dir) + "/" + file_name + "_" + nowmin + ".csv"
                 self.column = self.data.columns[0]
                 self.column_name_num = {col: num for num, col in enumerate(self.data.columns)}
                 #print(self.column_name_num)
@@ -114,77 +109,85 @@ class CsvEditor:
                 saved_position = json.load(open("data/position.json", "r"))
                 if saved_position["file"] == filepath:
                     self.go_to_row(saved_position["position"])
+                    print(f"Move to {saved_position["position"]}.")
         except:
             print("No saved position found.")
             pass
 
-    
-    def load_json(self):
-        filepath = filedialog.askopenfilename(filetypes=[("JSON files", "*.json")])
-        self.load(filepath)
-
     def skip_row(self):
         if self.data is not None:
-            if self.current_row < len(self.data) - 1:
+            if self.current_row < self.data_length - 1:
                 # save the input data to dict from the form
-                input_dict = {}  # Create an empty dictionary to store the input data
-                for frame, widget in self.entries:
+                #input_dict = {}  # Create an empty dictionary to store the input data
+                """for frame, widget in self.entries:
                     input_data = widget.get()
                     column = frame.winfo_children()[0].cget("text")
-                    input_dict[column] = input_data  # Save the input data to the dictionary
+                    #input_dict[column] = input_data  # Save the input data to the dictionary
                     #self.data.at[self.current_row, column] = input_data
-                #self.list_of_dicts.append(input_dict)
+                #self.list_of_dicts.append(input_dict)"""
+                print(f"Skip button was clicked at {datetime.datetime.now()}")
                 self.current_row += 1
                 self.update_form()
             else:
-         # save the json file
-                #with open(self.anotated_file, 'w') as f:
-                 #   json.dump(self.list_of_dicts, f)
-                #close the window
+                self.save_on_interrupt()
                 self.root.destroy()
 
     def next_row(self):
         if self.data is not None:
             now = datetime.datetime.now()
             # save the input data to dict from the form
-            input_dict = {}  # Create an empty dictionary to store the input data
+            #input_dict = {}  # Create an empty dictionary to store the input data
             for frame, widget in self.entries:
                 input_data = widget.get()
                 column = frame.winfo_children()[0].cget("text")
-                input_dict[column] = input_data  # Save the input data to the dictionary
-                self.data.at[self.current_row, column] = input_data
 
-                # データ型を適切にキャスト
+                """# データ型を適切にキャスト
                 if pd.api.types.is_numeric_dtype(self.data[column]):
                     input_data = pd.to_numeric(input_data, errors='coerce')
                 elif pd.api.types.is_datetime64_any_dtype(self.data[column]):
                     input_data = pd.to_datetime(input_data, errors='coerce')
-            
-                input_dict[column] = input_data  # Save the input data to the dictionary
+                elif pd.api.types.is_bool_dtype(self.data[column]):
+                    input_data = bool(input_data) if isinstance(input_data, str) and input_data.lower() in ['true', 'false'] else pd.NA
+                elif pd.api.types.is_string_dtype(self.data[column]):
+                    input_data = str(input_data)"""
+
                 self.data.at[self.current_row, column] = input_data
+
+                if column == "scientificName":
+                    animal_jname = input_data
+                    #print(f"japaneseName was set to {animal_jname} at {now}")
+            
+            if bool(re.match(r'^[A-Za-z]+$', str(animal_jname))):
+                animal_sname = animal_jname
+            else:
+                try:
+                    animal_sname = self.spieces[self.spieces["japanese_name"] == animal_jname]["scientific_name"].values[0]
+                except:
+                    animal_sname = "unknown"
                 
-            print(f"scientificName was set to {self.data.at[self.current_row, 'scientificName']} at {now}")
+            print(f"scientificName was set to {animal_sname} at {now}")
 
             # Save classificationTimestamp and classifiedBy to self.data as well
+            self.data.at[self.current_row, "scientificName"] = animal_sname
             self.data.at[self.current_row, "classificationTimestamp"] = str(now)
-            self.data.at[self.current_row, "classifiedBy"] = self.user_name
+            self.data.at[self.current_row, "classifiedBy"] = user_name
             self.data.at[self.current_row, "classificationMethod"] = "human"
             print(f"Next button was clicked at {now}")
             print(self.data.iloc[self.current_row])
-            if self.current_row < len(self.data) - 1:
+            #display the percentage of the data
+            print(f"{self.current_row + 1}/{self.data_length} ({(self.current_row/self.data_length)*100}%) data was anotated.")
+            if self.current_row < self.data_length -1:
                 time_current = datetime.datetime.strptime(self.data.at[self.current_row, 'eventEnd'], "%Y:%m:%d %H:%M:%S")
                 time_next = datetime.datetime.strptime(self.data.at[self.current_row+1, 'eventStart'], "%Y:%m:%d %H:%M:%S")
                 time_diff = (time_next - time_current).total_seconds()
                 if  abs(time_diff) < 120:
-                    self.data.at[self.current_row+1, 'scientificName'] = self.data.at[self.current_row, 'scientificName']
+                    self.data.at[self.current_row + 1, 'scientificName'] = animal_jname
                 self.current_row += 1
                 self.update_form()
+            elif self.current_row == self.data_length - 1:
+                self.save_on_interrupt()
+                self.root.destroy()
             else:
-         # save the json file
-                #with open(self.anotated_file, 'w') as f:
-                 #   json.dump(self.list_of_dicts, f)
-
-                # close the window
                 self.root.destroy()
 
     def prev_row(self):
@@ -209,17 +212,17 @@ class CsvEditor:
             label.pack(side=tk.LEFT)
             if column == "scientificName":
                 combobox = ttk.Combobox(frame, values=self.options)
-                combobox.set(row_data[column])
+                combobox.set(str(row_data[column]))
                 combobox.pack(side=tk.LEFT)
                 self.entries.append((frame, combobox))
             elif column == "lifestage":
                 combobox = ttk.Combobox(frame, values=["adult", "subadult", "juvenile", "unknown"])
-                combobox.set(row_data[column])
+                combobox.set(str(row_data[column]))
                 combobox.pack(side=tk.LEFT)
                 self.entries.append((frame, combobox))
             elif column == "sex":
                 combobox = ttk.Combobox(frame, values=["female", "male", "unknown"])
-                combobox.set(row_data[column])
+                combobox.set(str(row_data[column]))
                 combobox.pack(side=tk.LEFT)
                 self.entries.append((frame, combobox))
             else:
@@ -228,22 +231,19 @@ class CsvEditor:
                 entry.pack(side=tk.LEFT)
                 self.entries.append((frame, entry))
 
-        self.next_button.config(state=tk.NORMAL if self.current_row < len(self.data) - 1 else tk.DISABLED)
+        self.next_button.config(state=tk.NORMAL if self.current_row < len(self.data) else tk.DISABLED)
         self.skip_button.config(state=tk.NORMAL if self.current_row < len(self.data) - 1 else tk.DISABLED)
         self.prev_button.config(state=tk.NORMAL if self.current_row > 0 else tk.DISABLED)
     
     def save_on_interrupt(self):
-         # save the json file
-        #with open(self.anotated_file, 'w') as f:
-         #   json.dump(self.list_of_dicts, f)
-        print(f"Data saved to {self.anotated_file} due to interrupt.")
+        
         #print(self.list_of_dicts)
         # form a dataframe from the list of dicts
-        self_anotate_csv = self.anotated_file.replace(".json", ".csv")
-        self.data.to_csv(self_anotate_csv, index=False)
+        print(f"Data saved to {self.anotated_file}.")
+        self.data.to_csv(self.anotated_file, index=False)
         #overwrite current_row name and self_anotate_csv
         with open("data/position.json", "w") as f:
-            json.dump({"position": self.data.at[self.current_row, "img_id"], "file": self_anotate_csv}, f)
+            json.dump({"position": self.data.at[self.current_row, "img_id"], "file": self.anotated_file}, f)
 
     def on_close(self):
         self.save_on_interrupt()
@@ -280,6 +280,11 @@ if __name__ == "__main__":
     spieces = pd.read_csv(csv_file_path)
     
     root = tk.Tk()
+    root.title("CSV Editor")
+    font_size = 13
+
+    default_font = tkFont.nametofont("TkDefaultFont")
+    default_font.configure(size=font_size)
     
     # ファイル名とユーザー名を入力するためのフレームの作成
     input_frame = tk.Frame(root)
@@ -304,11 +309,16 @@ if __name__ == "__main__":
     root.mainloop()
 
     root = tk.Tk()
+    root.title("CSV Editor")
+    default_font = tkFont.nametofont("TkDefaultFont")
+    default_font.configure(size=font_size)
+    entry = tk.Entry(root)
+    entry.option_add("*Font", default_font)
+    
     editor = CsvEditor(root, spieces)
     root.protocol("WM_DELETE_WINDOW", editor.on_close)
 
     try:
-        signal.signal(signal.SIGINT, signal_handler)
         root.mainloop()
     except:
         editor.save_on_interrupt()
