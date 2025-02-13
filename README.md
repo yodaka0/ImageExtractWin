@@ -61,6 +61,8 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     ```
     If auto installation fail, run berow step.
 
+OR
+
 1. Clone the Repository：リポジトリの複製
 
     Run ```git clone```,  
@@ -76,7 +78,7 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     cd {ImageExtractWinのパス}
    例
     cd project\ImageExtractWin-master
-    python make_batch.py
+    python make_batch_gui.py
     ```
 
 3. create conda environment：conda環境の構築
@@ -108,11 +110,14 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
 
 DesktopにあるDetect_guiのショートカットをクリックする
 
-browsで画像があるフォルダを選択
+browsで画像があるフォルダを選択,
+
+検出モデルの選択,
+
+開始
 
 threshold:検出の閾値 ;
 skip:既にファイルがある場合スキップする ;
-checkpoint:処理の途中で途中経過を保存する;
 differential reasoning:前の画像と同じ位置のanimalの検出をblankに変換する
 
 
