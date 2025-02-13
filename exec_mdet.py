@@ -15,7 +15,7 @@ def process_image_helper(args):
     return instance.process_image(im_file, None)
 
 class ExecMdet:
-    def __init__(self, image_files, threshold, session_root, checkpoint, diff_reasoning, skip, md_model):
+    def __init__(self, image_files, threshold, session_root, diff_reasoning, skip, md_model, checkpoint=None):
         self.image_files = image_files
         self.threshold = threshold
         self.session_root = session_root
@@ -32,7 +32,7 @@ class ExecMdet:
         output_dir = self.session_root + "_out"
         #os.makedirs(output_dir, exist_ok=True)
         base_name = os.path.basename(self.session_root)
-        output_json_path = os.path.join(output_dir, f"{base_name}_output{self.model}.json")
+        output_json_path = os.path.join(output_dir, f"{base_name}_output_{self.model}.json")
         output_csv_path = os.path.join(output_dir, f"{base_name}_output_{self.model}.csv")
 
         pw_utils.save_detection_json(
@@ -86,6 +86,7 @@ class ExecMdet:
                     'eventStart': 0,
                     'eventEnd': 0,
                     'Make': None,
+                    'bbox': det_null.xyxy,
                     'deploymentID': os.path.basename(self.session_root),
                     'file': ex_file
                 }
@@ -109,7 +110,13 @@ class ExecMdet:
                 'img_id': im_file,
                 'detections': det_null,
                 'file': os.path.basename(im_file),
-                'object': -1
+                'object': -1,
+                 'eventStart': 0,
+                'eventEnd': 0,
+                'Make': None,
+                'bbox': det_null.xyxy,
+                'deploymentID': os.path.basename(self.session_root),
+                'file': ex_file
             }
 
     def run_detector_with_image_queue(self):
