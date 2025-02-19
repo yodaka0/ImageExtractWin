@@ -57,7 +57,7 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
 OR
 <br />
 
-2. Clone the Repository：リポジトリの複製
+1. Clone the Repository：リポジトリの複製
 
     Run ```git clone```,  
     ```git clone```を実行する
@@ -66,7 +66,7 @@ OR
     or Download ZIP and Unzip in any directory of yours. The following codes are assumed that it was extracted to the user's home directory (`/home/${USER}/`).  
     もしくはZIPをダウンロードし、任意のディレクトリで解凍してください。なお、このページではユーザのホームディレクトリ（`/home/${USER}/`）に解凍した前提でスクリプトを記載しています。
 
-3. Move Project Directory：プロジェクトディレクトリへ移動
+2. Move Project Directory：プロジェクトディレクトリへ移動
 
     ```commandprompt
     cd {ImageExtractWinのパス}
@@ -74,7 +74,7 @@ OR
     cd project\ImageExtractWin-master
     python make_batch_gui.py
     ```
-4. install miniconda(anaconda) : miniconda(anaconda)をインストール
+3. install miniconda(anaconda) : miniconda(anaconda)をインストール
 
     https://docs.conda.io/projects/miniconda/en/latest/
 
@@ -83,13 +83,13 @@ OR
     システム環境変数の編集->環境変数->PATH->新規->condaのpathをコピペ(例　C:\Users\{ユーザー名}\miniconda3\condabin)
     Edit System Environment Variables->Environment Variables->PATH->New->copy and paste the path for conda (e.g. C:\Users\{user name}\miniconda3\condabin)
    
-5. create conda environment：conda環境の構築
+4. create conda environment：conda環境の構築
 
     ```commandprompt
     conda env create -f environment.yml
     ```
     
-6. If you use gpu, visit the following site and install the matching version
+5. If you use gpu, visit the following site and install the matching version
    gpuを使う場合、以下のサイトを見てバージョンを合わせたものをインストールする
    
     CUDA Toolkit 12.3 Downloads
@@ -113,16 +113,16 @@ OR
 ## Usage：使い方
 
 <br />
-Click on the Detect_gui shortcut on the Desktop<br />
+1.Click on the Detect_gui shortcut on the Desktop<br />
 デスクトップにあるDetect_guiのショートカットをクリックする<br />
 
-Select a folder with images in browse, and click<br />
+2.Select a folder with images in browse, and click<br />
 browseで画像があるフォルダを選択,
 
-Select detection model,<br />
+3.Select detection model,<br />
 検出モデルの選択,<br />
 
-Start<br />
+4.Start<br />
 開始
 
 threshold:検出の閾値 ;<br />
