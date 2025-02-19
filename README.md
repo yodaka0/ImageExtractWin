@@ -52,10 +52,12 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     python mdet_setup.py
     ```
     If auto installation fail, run berow step.
-
+   
+<br />
 OR
+<br />
 
-1. Clone the Repository：リポジトリの複製
+2. Clone the Repository：リポジトリの複製
 
     Run ```git clone```,  
     ```git clone```を実行する
@@ -64,7 +66,7 @@ OR
     or Download ZIP and Unzip in any directory of yours. The following codes are assumed that it was extracted to the user's home directory (`/home/${USER}/`).  
     もしくはZIPをダウンロードし、任意のディレクトリで解凍してください。なお、このページではユーザのホームディレクトリ（`/home/${USER}/`）に解凍した前提でスクリプトを記載しています。
 
-2. Move Project Directory：プロジェクトディレクトリへ移動
+3. Move Project Directory：プロジェクトディレクトリへ移動
 
     ```commandprompt
     cd {ImageExtractWinのパス}
@@ -72,7 +74,7 @@ OR
     cd project\ImageExtractWin-master
     python make_batch_gui.py
     ```
-3. install miniconda(anaconda) : miniconda(anaconda)をインストール
+4. install miniconda(anaconda) : miniconda(anaconda)をインストール
 
     https://docs.conda.io/projects/miniconda/en/latest/
 
@@ -111,20 +113,20 @@ OR
 ## Usage：使い方
 
 <br />
-Click on the Detect_gui shortcut on the Desktop
-デスクトップにあるDetect_guiのショートカットをクリックする
+Click on the Detect_gui shortcut on the Desktop<br />
+デスクトップにあるDetect_guiのショートカットをクリックする<br />
 
-Select a folder with images in browse, and click
+Select a folder with images in browse, and click<br />
 browseで画像があるフォルダを選択,
 
-Select detection model,.
-検出モデルの選択,
+Select detection model,<br />
+検出モデルの選択,<br />
 
-Start 
+Start<br />
 開始
 
-threshold:検出の閾値 ;
-skip:既にファイルがある場合スキップする ;
+threshold:検出の閾値 ;<br />
+skip:既にファイルがある場合スキップする ;<br />
 differential reasoning:前の画像と同じ位置のanimalの検出をblankに変換する
 
 
