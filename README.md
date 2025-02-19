@@ -40,14 +40,6 @@ This program aims to detect wildlife from camera trap images using [MegaDetector
     If nvidia-smi does not work, Try Rebooting.  
     nvidia-smiコマンドが動作しない場合は再起動してみてください。
 
-* Conda
-
-    miniconda(anaconda)をインストール
-    https://docs.conda.io/projects/miniconda/en/latest/
-
-    condaのパスを通す
-    システム環境変数の編集->環境変数->PATH->新規->condaのpathをコピペ(例　C:\Users\{ユーザー名}\miniconda3\condabin)
-
 
 <br />
 
@@ -80,16 +72,28 @@ OR
     cd project\ImageExtractWin-master
     python make_batch_gui.py
     ```
+3. install miniconda(anaconda) : miniconda(anaconda)をインストール
 
-3. create conda environment：conda環境の構築
+    https://docs.conda.io/projects/miniconda/en/latest/
+
+    condaのパスを通す
+    Pass through the path of conda
+    システム環境変数の編集->環境変数->PATH->新規->condaのpathをコピペ(例　C:\Users\{ユーザー名}\miniconda3\condabin)
+    Edit System Environment Variables->Environment Variables->PATH->New->copy and paste the path for conda (e.g. C:\Users\{user name}\miniconda3\condabin)
+   
+5. create conda environment：conda環境の構築
 
     ```commandprompt
     conda env create -f environment.yml
     ```
-4. gpuを使う場合、以下のサイトを見てバージョンを合わせたものをインストールする
+    
+6. If you use gpu, visit the following site and install the matching version
+   gpuを使う場合、以下のサイトを見てバージョンを合わせたものをインストールする
+   
     CUDA Toolkit 12.3 Downloads
     https://developer.nvidia.com/cuda-downloads 
 
+    Installation of cudnn (login required)
     cudnnのインストール(ログインが必要)
     https://developer.nvidia.com/rdp/cudnn-download
 
@@ -107,13 +111,16 @@ OR
 ## Usage：使い方
 
 <br />
+Click on the Detect_gui shortcut on the Desktop
+デスクトップにあるDetect_guiのショートカットをクリックする
 
-DesktopにあるDetect_guiのショートカットをクリックする
+Select a folder with images in browse, and click
+browseで画像があるフォルダを選択,
 
-browsで画像があるフォルダを選択,
-
+Select detection model,.
 検出モデルの選択,
 
+Start 
 開始
 
 threshold:検出の閾値 ;
