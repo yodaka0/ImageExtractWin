@@ -4,6 +4,8 @@
 import numpy as np
 import os
 from PIL import Image
+from PIL import ImageDraw
+from PIL import ImageFont
 
 #%% 
 # PyTorch imports 
@@ -14,7 +16,11 @@ from PytorchWildlife.models import detection as pw_detection
 #from PytorchWildlife.data import transforms as pw_trans
 from PytorchWildlife import utils as pw_utils
 
-from classifier import Classifier
+try:
+    from classifier import Classifier
+    from dp_ethi import estimate_depth
+except:
+    print("Classifier and depth estimation not available")
 
 
 def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasoning=False, verbose=False, model=None):
@@ -23,6 +29,8 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
         threshold = 0.2
 
     classify = False
+    depth = False
+    exif_inherit = False
     
     #%% 
     # Setting the device to use for computations ('cuda' indicates GPU)
@@ -99,6 +107,7 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
         result['eventStart']  = exif_data[36867]
         result['eventEnd'] = exif_data[36867]
         result["Make"] = exif_data[271]
+        result["bbox"] = result['detections'].xyxy
     except:
         result['eventStart'] = "None"
         result['eventEnd'] = "None"
@@ -111,6 +120,10 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
             print(f"Saving detection images to {new_file_path}")
             print(result)
         pw_utils.save_detection_images(result, new_file_path, overwrite=False)
+        if exif_inherit:
+            new_img = Image.open(new_file)
+            if "exif" in img.info:
+                new_img.save(new_file, exif=img.info["exif"])
         if classify:
             try:
                 animalclass = Classifier(model_dir=os.getcwd())
@@ -119,6 +132,38 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
                 result['sp_confidence'] = conf
             except Exception as e:
                 print(f"Error in classification: {e}")
+                raise
+        if depth:
+            try:
+                bbox = result['detections'].xyxy
+                depth_map, mean_depths = estimate_depth(img, bbox)
+                #print("Depth estimation successful")
+                #result['depth_map'] = depth_map
+                result['mean_depths'] = [round(depth, 3) for depth in mean_depths]
+                # Saving the depth map
+                #print(f"new_file_path is {new_file_path}")
+                depth_map_path = os.path.join(new_file_path, os.path.basename(im_file).replace(".JPG", "_depth.JPG"))
+                #print(f"Saving depth map to {depth_map_path}")
+                if not os.path.exists(depth_map_path):
+                    # Convert depth_map to PIL Image
+                    depth_map_image = Image.fromarray((depth_map * 255).astype(np.uint8))
+                    # put bbox on the depth map and save it
+                    draw = ImageDraw.Draw(depth_map_image)
+                    for i, b in enumerate(bbox):
+                        #image_width, image_height = depth_map_image.size
+                        image_bbox = [
+                            int(b[0]),  # x0
+                            int(b[1]),  # y0
+                            int(b[2]),  # x1
+                            int(b[3])   # y1
+                            ]
+                        draw.rectangle(image_bbox, outline='orange', width=5)
+                        #add mean depth to the bbox in the depth map
+                        font = ImageFont.truetype("arial.ttf", 40)
+                        draw.text((image_bbox[0], image_bbox[1] - 40), f"depth:{mean_depths[i]:.2f}", fill="orange", font=font)
+                    depth_map_image.save(depth_map_path)
+            except Exception as e:
+                print(f"Error in depth estimation: {e}")
                 raise
 
     return result
