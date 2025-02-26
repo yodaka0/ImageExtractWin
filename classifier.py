@@ -8,20 +8,53 @@ import timm
 import numpy as np
 from PIL import Image
 import os
+import json
 
-# 動物のクラスラベル
-txt_animalclass = [
-    "badger", "ibex", "beaver", "red deer", "chamois", "cat", "goat", "roe deer", "dog", "fallow deer", "squirrel", "equid", "genet",
-    "hedgehog", "lagomorph", "wolf", "otter", "lynx", "marmot", "micromammal", "mouflon",
-    "sheep", "mustelid", "bird", "bear", "nutria", "raccoon", "fox", "wild boar", "cow"
-]
-BACKBONE = "vit_large_patch14_dinov2.lvd142m"
-weight_path = 'deepfaune-vit_large_patch14_dinov2.lvd142m.v2.pt'
-CROP_SIZE = 518
 
+
+def download_model(path):
+
+    # 動物のクラスラベル
+
+    model = "Kirghizistan - Manas v1 - OSI-Panthera - Hex Data"
+    print(f"classify model: {model}")
+    #import json file
+    model_info = json.load(open("model_info_v1.json"))
+    txt_animalclass = model_info["cls"][model]["all_classes"]
+
+    """[
+        "badger", "ibex", "beaver", "red deer", "chamois", "cat", "goat", "roe deer", "dog", "fallow deer", "squirrel", "equid", "genet",
+        "hedgehog", "lagomorph", "wolf", "otter", "lynx", "marmot", "micromammal", "mouflon",
+        "sheep", "mustelid", "bird", "bear", "nutria", "raccoon", "fox", "wild boar", "cow"
+    ]"""
+    BACKBONE = "vit_large_patch14_dinov2.lvd142m"
+    weight_url = model_info["cls"][model]["download_info"][0][0]
+    #'deepfaune-vit_large_patch14_dinov2.lvd142m.v2.pt'
+    CROP_SIZE = 518
+
+    # home directory
+    path = os.path.expanduser("~")
+    downloading_dir = os.path.join(path, ".cache", "torch", "hub", "checkpoints")
+    download_path = os.path.join(downloading_dir, weight_url.split("/")[-1]).replace("?download=true", "")
+    if not os.path.exists(download_path):
+        print(f"Dowloading model to {download_path}")
+        import requests
+        r = requests.get(weight_url, stream=True)
+        
+        with open(download_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024):
+                if chunk:
+                    f.write(chunk)
+        print(f"Model downloaded to {download_path}")
+    return txt_animalclass, BACKBONE, CROP_SIZE, download_path
 
 class Classifier:
     def __init__(self, model_dir=os.getcwd()):
+        global txt_animalclass
+        global BACKBONE
+        global CROP_SIZE
+        global weight_path
+        txt_animalclass, BACKBONE, CROP_SIZE, weight_path = download_model(model_dir)
         self.model = Model()
         self.model.load_weights(os.path.join(model_dir, weight_path))
         self.transforms = transforms.Compose([
@@ -66,6 +99,7 @@ class Classifier:
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
+        
         self.base_model = timm.create_model(BACKBONE, pretrained=False, num_classes=len(txt_animalclass))
 
     def forward(self, input):
@@ -87,28 +121,22 @@ class Model(nn.Module):
     def load_weights(self, path):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        if path[-3:] != ".pt":
+        if not path.endswith(".pt"):
             path += ".pt"
         try:
+            # まず torch.load で読み込んでみる
             params = torch.load(path, map_location=device)
-            if 'args' in params:
-                args = params['args']
-                if 'num_classes' in args and self.base_model.num_classes != args['num_classes']:
-                    raise Exception("You load a model ({}) that does not have the same number of class ({})".format(args['num_classes'], self.base_model.num_classes))
-            self.load_state_dict(params['state_dict'])
+            if isinstance(params, dict) and 'state_dict' in params:
+                # 通常の checkpoint の場合
+                if 'args' in params:
+                    args = params['args']
+                    if 'num_classes' in args and self.base_model.num_classes != args['num_classes']:
+                        raise Exception("Loaded model classes ({}) do not match expected ({})".format(args['num_classes'], self.base_model.num_classes))
+                self.load_state_dict(params['state_dict'])
+            else:
+                # TorchScript 形式の場合
+                script_module = torch.jit.load(path, map_location=device)
+                self.base_model = script_module
         except Exception as e:
             print("Can't load checkpoint model because :\n\n " + str(e), file=sys.stderr)
             raise e
-
-
-if __name__ == "__main__":
-    classifier = Classifier()
-    image_path = "C:/Users/tomoyakanno/Documents/nullremove/ogawa.2020.12/21/10100043.JPG"
-    img = Image.open(image_path)
-    result = {
-        "bbox": [
-            [668, 1001, 1386, 1692],
-            [0, 931, 591, 1831]
-        ]
-    }
-    classifier.run_prediction(result, img)
