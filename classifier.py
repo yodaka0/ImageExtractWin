@@ -90,7 +90,8 @@ class Classifier:
                 predictions.append(txt_animalclass[predicted_class_idx])
                 confidences.append(prediction[0][predicted_class_idx])
                 print(f"Predicted class: {txt_animalclass[predicted_class_idx]}, Confidence: {prediction[0][predicted_class_idx]}")
-            return predictions, confidences
+            return predictions, confidences, self.model
+        
         except Exception as e:
             print(f"Error in running prediction: {e}")
             return None, None
