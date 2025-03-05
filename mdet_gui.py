@@ -4,6 +4,7 @@ from tkinter import filedialog, messagebox
 from natsort import natsorted
 from exec_mdet import ExecMdet
 from tkinter import font
+import pandas as pd
 
 def create_new_structure(src_dir):
     dst_dir = os.path.dirname(src_dir)
@@ -27,6 +28,10 @@ def find_image_files(folder_path):
 
     image_files = natsorted(image_files)
 
+    # Normalize paths to use the correct os-specific separator
+    image_files = [os.path.normpath(file) for file in image_files]
+
+
     return image_files
 
 
@@ -39,24 +44,41 @@ def browse_session_root():
 def start_process():
     session_root = session_root_entry.get()
     threshold = float(threshold_entry.get())
+    method = method_var.get()
     #checkpoint = checkpoint_entry.get()
     diff_reasoning = diff_reason_swich.get()
     skip = skip_swich.get()
     md_model = model_var.get()
     open_folder = True
+    deployments = True
     
 
     image_files = find_image_files(session_root)
+     
+    """if checkpoint.startswith("r"):
+        checkpoint = len(image_files) // int(checkpoint[1:])
+    elif not checkpoint:
+        checkpoint = None
+    else:
+        checkpoint = int(checkpoint)"""
 
-    print(f"Session Root:{session_root}, Threshold:{threshold}, Differential reasoning:{diff_reasoning}, Exist skip:{skip}")
-
-    
+    print(f"Session Root:{session_root}, Threshold:{threshold}, Differential reasoning:{diff_reasoning}, Exist skip:{skip}, Detection model:{md_model}")
+ 
     #parent_dir = os.path.dirname(session_root)
     create_new_structure(session_root)
     
     output_dir = session_root + "_out"
 
-    exec_mdet = ExecMdet(image_files, threshold, session_root, diff_reasoning, skip, md_model)
+    if deployments:
+        from make_media import get_media_info
+        media_info = get_media_info(image_files, method)
+        media_info_df = pd.DataFrame(media_info)
+        media_info_df.to_csv(os.path.join(output_dir, "media_info.csv"), index=False)
+    else:
+        media_info = None
+        
+
+    exec_mdet = ExecMdet(image_files, threshold, session_root, diff_reasoning, skip, md_model, media_info)
     exec_mdet.run_detector_with_image_queue()
     messagebox.showinfo("Info", f"Process completed successfully. Check the output folder {output_dir} for results.")
     root.destroy()
@@ -82,9 +104,13 @@ threshold_entry = tk.Entry(root, width=50)
 threshold_entry.insert(0, "0.2") 
 threshold_entry.grid(row=1, column=1, padx=10, pady=5)
 
-"""tk.Label(root, text="Checkpoint:").grid(row=2, column=0, padx=10, pady=5)
-checkpoint_entry = tk.Entry(root, width=50)
-checkpoint_entry.grid(row=2, column=1, padx=10, pady=5)"""
+tk.Label(root, text="CaptureMethod:").grid(row=6, column=0, padx=10, pady=5)
+method_var = tk.StringVar(root)
+method_var.set("activityDetection")
+method_option = tk.OptionMenu(root, method_var, 
+                "activityDetection","timeLapse","other","unknown")
+method_option['menu'].config(font=('Helvetica', font_size))
+method_option.grid(row=6, column=1, padx=10, pady=5)
 
 tk.Label(root, text="Differential reasoning:").grid(row=3, column=0, padx=10, pady=5)
 diff_reason_swich = tk.BooleanVar(root)
@@ -110,7 +136,8 @@ model_option.grid(row=2, column=1, padx=10, pady=5)
 
 
 start_button = tk.Button(root, text="Start", command=start_process)
-start_button.grid(row=6, column=0, columnspan=3, pady=20)
+start_button.grid(row=7, column=0, columnspan=3, pady=20)
 
 if __name__ == "__main__":
     root.mainloop()
+
