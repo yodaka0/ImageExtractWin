@@ -108,7 +108,13 @@ def start_process():
         media_df.to_csv(media_file, index=False)
 
     dp_file = filedialog.askopenfilename()
-    deplo_df = pd.read_csv(dp_file, dtype=str, low_memory=False, encoding='ISO-8859-1')
+    # 拡張子によって処理を分岐
+    if dp_file.endswith('.csv'):
+        deplo_df = pd.read_csv(dp_file, dtype=str, low_memory=False, encoding='ISO-8859-1')
+    elif dp_file.endswith('.xlsx'):
+        deplo_df = pd.read_excel(dp_file, dtype=str)
+    else:
+        messagebox.showerror("Error", "Invalid deployment info file format.")
     deplo_df.columns = [col.strip() for col in deplo_df.columns]
     print(deplo_df)
 
