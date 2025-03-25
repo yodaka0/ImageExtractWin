@@ -16,7 +16,7 @@ def process_image_helper(args):
 
 
 class ExecMdet:
-    def __init__(self, image_files, threshold, session_root, diff_reasoning, skip, md_model, mediainfo=None):
+    def __init__(self, image_files, threshold, session_root, diff_reasoning, skip, md_model, mediainfo=None, classify=False):
         self.image_files = image_files
         self.threshold = threshold
         self.session_root = session_root
@@ -26,6 +26,7 @@ class ExecMdet:
         self.verbose = False
         self.model = md_model
         self.mediainfo = mediainfo
+        self.classify = classify
 
 
 
@@ -97,7 +98,8 @@ class ExecMdet:
                 pre_detects = prev_result['detections'] if prev_result else None
                 result = pw_detect(
                     im_file, new_file, self.threshold,
-                    pre_detects, self.diff_reasoning, self.verbose, self.model
+                    pre_detects, self.diff_reasoning, self.verbose,
+                    self.model, self.classify
                 )
             if self.mediainfo is not None:
                 self.mediainfo = pd.DataFrame(self.mediainfo)
