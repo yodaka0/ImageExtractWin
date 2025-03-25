@@ -49,6 +49,7 @@ def start_process():
     diff_reasoning = diff_reason_swich.get()
     skip = skip_swich.get()
     md_model = model_var.get()
+    classify = classify_swich.get()
     open_folder = True
     deployments = True
     
@@ -62,7 +63,7 @@ def start_process():
     else:
         checkpoint = int(checkpoint)"""
 
-    print(f"Session Root:{session_root}, Threshold:{threshold}, Differential reasoning:{diff_reasoning}, Exist skip:{skip}, Detection model:{md_model}")
+    print(f"Session Root:{session_root}, Threshold:{threshold}, Differential reasoning:{diff_reasoning}, Exist skip:{skip}, Detection model:{md_model}, Capture method:{method}, Classify:{classify}")
  
     #parent_dir = os.path.dirname(session_root)
     create_new_structure(session_root)
@@ -78,7 +79,7 @@ def start_process():
         media_info = None
         
 
-    exec_mdet = ExecMdet(image_files, threshold, session_root, diff_reasoning, skip, md_model, media_info)
+    exec_mdet = ExecMdet(image_files, threshold, session_root, diff_reasoning, skip, md_model, media_info, classify)
     exec_mdet.run_detector_with_image_queue()
     messagebox.showinfo("Info", f"Process completed successfully. Check the output folder {output_dir} for results.")
     root.destroy()
@@ -133,6 +134,13 @@ model_option = tk.OptionMenu(root, model_var,
                              "MegaDetector_v5", "HerdNet", "MDV6-yolov9-c", "MDV6-yolov9-e", "MDV6-yolov10-c", "MDV6-yolov10-e", "MDV6-rtdetr-c","MDV6-yolov9-e-1280")
 model_option['menu'].config(font=('Helvetica', font_size))
 model_option.grid(row=2, column=1, padx=10, pady=5)
+
+tk.Label(root, text="classify").grid(row=5, column=0, padx=10, pady=5)
+classify_swich = tk.BooleanVar(root)
+classify_swich.set(False)
+#add checkbutton for classify
+classify_checkbutton = tk.Checkbutton(root, variable=classify_swich)
+classify_checkbutton.grid(row=5, column=1, padx=10, pady=5)
 
 
 start_button = tk.Button(root, text="Start", command=start_process)
