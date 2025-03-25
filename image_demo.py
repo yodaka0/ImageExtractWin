@@ -16,20 +16,21 @@ import torch
 from PytorchWildlife.models import detection as pw_detection
 #from PytorchWildlife.data import transforms as pw_trans
 from PytorchWildlife import utils as pw_utils
+from PytorchWildlife.models import classification as pw_classification
 
 try:
-    from classifier import Classifier
+    #from classifier import Classifier
     from dp_ethi import estimate_depth
 except:
     print("Classifier and depth estimation not available")
 
 
-def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasoning=False, verbose=False, model=None):
+def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasoning=False, verbose=False, model=None, classify=False):
 
     if not isinstance(threshold, float):
         threshold = 0.2
 
-    classify = False
+    #classify = True
     depth = False
     exif_inherit = True
     
@@ -77,12 +78,12 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
             result = detection_model.single_image_detection(img=img, img_path=im_file)
             print("threshold set defalut value")
 
-    
+        #print(result['normalized_coords'])
         #result['img_id'] = result['img_id'].replace("\\","/")
-
+        bounding_boxes = result['detections'].xyxy
         if diff_reasoning and pre_detects is not None:
             # extract values of bounding boxes from the result dictionary
-            bounding_boxes = result['detections'].xyxy
+            
             prev_bounding_boxes = pre_detects.xyxy
             # if bounding boxes heardly change, then animal change into blank
             if len(bounding_boxes) == len(prev_bounding_boxes):
@@ -124,14 +125,29 @@ def pw_detect(im_file, new_file, threshold=None, pre_detects=None, diff_reasonin
                 new_img = Image.open(new_file)
                 if "exif" in img.info:
                     new_img.save(new_file, exif=img.info["exif"])
-            if classify:
+            if classify and model == "MegaDetector_v5":
                 try:
-                    animalclass, moedlname = Classifier(model_dir=os.getcwd())
+                    classification_model = pw_classification.SpeciesNetTFInference(version='v4.0.0a', run_mode='multi_thread')
+                    clf_conf_thres = 0.5
+                    tgt_img_path = im_file
+                    clf_labels = []
+                    for i in range(len(result['normalized_coords'])):
+                        r = {
+                            'img_id': tgt_img_path,
+                            'normalized_coords': [result['normalized_coords'][i]]
+                            }
+                        clf_results = classification_model.single_image_classification(tgt_img_path, det_results=r)[0]
+                        print(clf_results)
+                        clf_labels.append("{} {:.2f}".format(clf_results["prediction"] if clf_results["confidence"] > clf_conf_thres else "Unknown",
+                                                            clf_results["confidence"]))
+                        
+                    result["labels"] = clf_labels
+                    """"animalclass, moedlname = Classifier(model_dir=os.getcwd())
                     sp, conf = animalclass.run_prediction(result, img)
                     result['scientific_name'] = sp
                     result['classificationProbability'] = conf
                     result['classificationTimestamp'] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-                    result['classifiedBy'] = moedlname
+                    result['classifiedBy'] = moedlname"""
                 except Exception as e:
                     print(f"Error in classification: {e}")
                     raise
