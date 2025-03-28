@@ -48,7 +48,7 @@ def get_media_info(image_files, method=None):
         media_id =hash(image_file.encode()).hexdigest()[:16]
         deploymentID = re.split(r'[\\/]', image_file)
         #print(deploymentID)
-        deploymentID = "_".join(deploymentID[4:7])
+        deploymentID = "__".join(deploymentID[4:7])
 
          
         media_info.append({
