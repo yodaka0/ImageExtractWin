@@ -49,9 +49,13 @@ def run_command(command):
     result = subprocess.run(command, shell=True, check=True, text=True)
     return result
 
-def create_program_dir(project_dir, github_url):
+def create_program_dir(github_url, project=None):
     repo_url = github_url + "ImageExtractWin.git"
     zip_url = github_url + "ImageExtractWin/archive/refs/heads/gui.zip"
+
+    if project is None:
+        project = "master"
+    project_dir =  "~/ImageExtractWin-" + project
 
     """Create a directory for the program."""
     # If project directory already exists, check whether to overwrite
@@ -73,7 +77,7 @@ def create_program_dir(project_dir, github_url):
     os.makedirs(project_dir_path, exist_ok=True)
 
     try:
-        run_command(f"git clone {repo_url} {project_dir_path}")
+        run_command(f"git clone -b {project} {repo_url} {project_dir_path}")
     except subprocess.CalledProcessError:
         print("Git clone failed, attempting to download ZIP.")
         download_and_extract_zip(zip_url, project_dir_path)
@@ -121,10 +125,11 @@ def main():
             print(f"\033[32mFailed to install Miniconda. Please install Miniconda manually from {installer_url}\033[0m")
             raise
 
+    project = "prototype"
 
-    project_dir = "~/ImageExtractWin-v1.2"
+    project_dir = "~/ImageExtractWin-" + project
 
-    create_program_dir(project_dir, github_url)
+    create_program_dir(github_url, project)
 
     os.chdir(os.path.expanduser(project_dir))
 
