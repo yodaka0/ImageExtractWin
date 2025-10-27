@@ -24,19 +24,19 @@ class CsvEditor:
         self.frame = tk.Frame(self.root)
         self.frame.pack()
 
-        self.load_button = tk.Button(self.frame, text="Load CSV", command=self.load_csv)
+        self.load_button = tk.Button(self.frame, text="CSV 読み込み", command=self.load_csv)
         self.load_button.pack()
 
-        self.save_button = tk.Button(self.frame, text="Save to CSV", command=self.save_on_interrupt)
+        self.save_button = tk.Button(self.frame, text="CSVに保存", command=self.save_on_interrupt)
         self.save_button.pack()
 
-        self.skip_button = tk.Button(self.frame, text="Skip", command=self.skip_row, state=tk.DISABLED)
+        self.skip_button = tk.Button(self.frame, text="スキップ", command=self.skip_row, state=tk.DISABLED)
         self.skip_button.pack()
 
-        self.next_button = tk.Button(self.frame, text="Modified and Next", command=self.next_row, state=tk.DISABLED)
+        self.next_button = tk.Button(self.frame, text="更新して次へ", command=self.next_row, state=tk.DISABLED)
         self.next_button.pack()
 
-        self.prev_button = tk.Button(self.frame, text="Previous", command=self.prev_row, state=tk.DISABLED)
+        self.prev_button = tk.Button(self.frame, text="前へ", command=self.prev_row, state=tk.DISABLED)
         self.prev_button.pack()
 
         # 入力フィールドを作成します。
@@ -44,7 +44,7 @@ class CsvEditor:
         self.input_field.pack()
 
         # ボタンを作成します。
-        self.jump_button = tk.Button(self.frame, text="Move", command=self.go_to_row)
+        self.jump_button = tk.Button(self.frame, text="移動", command=self.go_to_row)
         self.jump_button.pack()
 
         self.entries = []
@@ -89,8 +89,8 @@ class CsvEditor:
                     self.anotated_file = file_dir + "/" + f"{file_name}_{nowmin}.csv"
                 except:
                     print("Invalid file path")
-                    file_dir = filepath.split("/")[:-1]
-                    self.anotated_file = "/".join(file_dir) + "/" + file_name + "_" + nowmin + ".csv"
+                    file_dir = filepath.split(os.path.sep)[:-1]
+                    self.anotated_file = os.path.sep.join(file_dir) + os.path.sep + file_name + "_" + nowmin + ".csv"
                 self.column = self.data.columns[0]
                 self.column_name_num = {col: num for num, col in enumerate(self.data.columns)}
                 #print(self.column_name_num)
@@ -110,6 +110,10 @@ class CsvEditor:
                 if saved_position["file"] == filepath:
                     self.go_to_row(saved_position["position"])
                     print(f"Move to {saved_position["position"]}.")
+                else:
+                    print(f"No saved position found for this file {filepath} == saved_position {saved_position["file"]}.")
+            else:
+                print("No saved position found.")
         except:
             print("No saved position found.")
             pass
@@ -243,7 +247,7 @@ class CsvEditor:
         self.data.to_csv(self.anotated_file, index=False)
         #overwrite current_row name and self_anotate_csv
         with open("data/position.json", "w") as f:
-            json.dump({"position": self.data.at[self.current_row, "img_id"], "file": self.anotated_file}, f)
+            json.dump({"position": self.data.at[self.current_row, "img_id"], "file": self.anotated_file}, f, ensure_ascii = False)
 
     def on_close(self):
         self.save_on_interrupt()
@@ -291,19 +295,19 @@ if __name__ == "__main__":
     input_frame.pack(pady=10)
 
     # ファイル名のラベルと入力フィールド
-    file_name_label = tk.Label(input_frame, text="file name:")
+    file_name_label = tk.Label(input_frame, text="ファイル名:")
     file_name_label.pack(side=tk.LEFT)
     file_name_entry = tk.Entry(input_frame)
     file_name_entry.pack(side=tk.LEFT)
 
     # ユーザー名のラベルと入力フィールド
-    user_name_label = tk.Label(input_frame, text="user name:")
+    user_name_label = tk.Label(input_frame, text="作業者名:")
     user_name_label.pack(side=tk.LEFT)
     user_name_entry = tk.Entry(input_frame)
     user_name_entry.pack(side=tk.LEFT)
 
     # 次へボタン
-    next_button = tk.Button(input_frame, text="Next", command=preinput)
+    next_button = tk.Button(input_frame, text="次", command=preinput)
     next_button.pack()
 
     root.mainloop()
@@ -323,4 +327,3 @@ if __name__ == "__main__":
     except:
         editor.save_on_interrupt()
         raise
-
