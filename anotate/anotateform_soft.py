@@ -86,7 +86,7 @@ class CsvEditor:
                 try:
                     # change the file name to new one
                     file_dir = os.path.dirname(filepath)
-                    self.anotated_file = os.path.join(file_dir, f"{file_name}_{nowmin}.csv")
+                    self.anotated_file = file_dir + "/" + f"{file_name}_{nowmin}.csv"
                 except:
                     print("Invalid file path")
                     file_dir = filepath.split("/")[:-1]
@@ -177,8 +177,8 @@ class CsvEditor:
             #display the percentage of the data
             print(f"{self.current_row + 1}/{self.data_length} ({(self.current_row/self.data_length)*100}%) data was anotated.")
             if self.current_row < self.data_length -1:
-                time_current = datetime.datetime.strptime(self.data.at[self.current_row, 'eventEnd'], "%Y:%m:%d %H:%M:%S")
-                time_next = datetime.datetime.strptime(self.data.at[self.current_row+1, 'eventStart'], "%Y:%m:%d %H:%M:%S")
+                time_current = datetime.datetime.strptime(self.data.at[self.current_row, 'eventEnd'], "%Y:%m:%dT%H:%M:%SZ")
+                time_next = datetime.datetime.strptime(self.data.at[self.current_row+1, 'eventStart'], "%Y:%m:%dT%H:%M:%SZ")
                 time_diff = (time_next - time_current).total_seconds()
                 if  abs(time_diff) < 120:
                     self.data.at[self.current_row + 1, 'scientificName'] = animal_jname
@@ -323,3 +323,4 @@ if __name__ == "__main__":
     except:
         editor.save_on_interrupt()
         raise
+
